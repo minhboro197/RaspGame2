@@ -3,6 +3,8 @@
 #include "wall_block.h"
 #define SCREEN_WIDTH_OFFSET 12
 
+
+
 void draw_map(){
     int j =1;
     for(int i = 0; i < 23; i++){

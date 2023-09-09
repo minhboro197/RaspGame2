@@ -36,6 +36,7 @@ typedef struct {
     unsigned int bomb_num;
     int clone;
     Bombs bomb[5];
+    unsigned int health;
 
 } human;
 

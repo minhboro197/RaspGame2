@@ -35,6 +35,7 @@ void main(){
         {'s',100},
         {'a',100}
     };
+    
 
     human player1 = character1_init(50,50);
     human npc = character1_init(100,100);

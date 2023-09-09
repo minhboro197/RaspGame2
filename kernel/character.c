@@ -78,6 +78,7 @@ human character1_init(int x, int y){
     character1.offset = 8;
     character1.move_index = 0;
     character1.bomb_num = 0;
+    character1.health = 4;
     return character1;
 }
 
