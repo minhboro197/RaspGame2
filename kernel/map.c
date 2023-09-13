@@ -22,8 +22,6 @@ void draw_map(int map[][28]){
 
 }
 
-
-
 void draw_map_from_array(int map[][28]){
         for(int i = 0; i < 18; i++){
             for(int j = 0; j < 28; j++){
