@@ -42,11 +42,12 @@ void print_map(int map[][28]){
 
 
 void main(){
+    int step = 38 *3;
     moves npc1_moves[] ={
-        {'d',200},
-        {'s',200},
-        {'a',200},
-        {'w',200}
+        {'d',100},
+        {'a',100},
+        {'s',100},
+        {'w',100}
     };
 
     moves npc2_moves[] ={
@@ -59,7 +60,7 @@ void main(){
     // wall block width and height is 38 and 46
     // span npc in the below formar
     human player1 = character1_init(38,46*3);
-    human npc = character1_init(38,46*9);
+    human npc = character1_init(38*10,46*10);
     human npc2 = character1_init(38*5,46*9);
     
     // set up serial console
@@ -109,7 +110,7 @@ void main(){
         
         if(timer){
             if((timer % 10) == 0){   // every 100ms
-                // 
+
                 npc = move(characters,npc, npc1_moves, sizeof(npc1_moves) / sizeof(npc1_moves[0]),0);
                 npc = controlCharater(characters,npc, 't',1,0); // refresh character
                 npc2 = move(characters,npc2, npc2_moves, sizeof(npc2_moves) / sizeof(npc2_moves[0]),0);

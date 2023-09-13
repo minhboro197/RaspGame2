@@ -4,8 +4,8 @@
 #include "magewalking.h"
 #include "framebf.h"
 #include "bomb_explosion.h"
-
-
+#include "map_array.h"
+#include "../uart/uart1.h"
 // Track player on the map and collison dection with walls
 int tracking_player_on_map(human player, int map[][28], char c){
     int player_width = 25;
@@ -34,11 +34,8 @@ int tracking_player_on_map(human player, int map[][28], char c){
 }
 
 int collision_detection(human humans[], unsigned int object_x, unsigned int object_y){
-   for(int i = 0; i < 3; i++){
-        if(absolute(humans[i].x - object_x) < 40 && absolute(humans[i].y - object_y) < 40){
-
-            return 1;
-        }
+    if(map2[object_y/46][object_x/38] > 0){
+        return 2;
     }
     return 0;
 }
@@ -54,6 +51,7 @@ void drawGameAsset(int frame, unsigned int offset_x,unsigned int offset_y, unsig
     }
 }
 
+int ignore_collision_after_explosion = 0;
 human plant_bomb(human characters[],human player1, char c){
     if(c == 'j'){
             if(player1.bomb_num > 4){
@@ -66,26 +64,26 @@ human plant_bomb(human characters[],human player1, char c){
             player1.bomb_num++;
         }
     for(int i = 0; i < player1.bomb_num; i++){
-        int collision_bomb[4] = {0,0,0,0};
+        int collision_bomb[4] = {-1,-1,-1,-1};
         if(player1.bomb[i].state == 1){
-            drawGameAsset(player1.bomb[i].frame, player1.bomb[i].x,player1.bomb[i].y,46,49,bomb_allArray);
+            drawGameAsset(player1.bomb[i].frame, player1.bomb[i].x,player1.bomb[i].y,bomb_width,bomb_height,bomb_allArray);
             if(player1.bomb[i].frame > 4){
-                for(int j =0; j < 4; j++){  // 4 here is max range change this later
-                    int bomb_directions[4][2] = {{player1.bomb[i].x, player1.bomb[i].y - 48*j},
-                                                {player1.bomb[i].x, player1.bomb[i].y + 48*j},
-                                                {player1.bomb[i].x - 48*j,player1.bomb[i].y},
-                                                {player1.bomb[i].x + 48*j,player1.bomb[i].y}};
+                for(int j = 0; j < 4; j++){  // 4 here is max range change this later
+                    int bomb_directions[4][2] = {{player1.bomb[i].x, player1.bomb[i].y -46*j},
+                                                {player1.bomb[i].x, player1.bomb[i].y + 46*j},
+                                                {player1.bomb[i].x - 38*j,player1.bomb[i].y},
+                                                {player1.bomb[i].x + 38*j,player1.bomb[i].y}};
 
                     for(int k = 0; k < 4; k++){
-                        if(collision_detection(characters, bomb_directions[k][0], bomb_directions[k][1]) == 0 && collision_bomb[k] == 0){
-                            
-                            drawGameAsset(player1.bomb[i].frame-4, bomb_directions[k][0],bomb_directions[k][1],48,48,bomb_explosion_allArray);
+                        int collision_type = collision_detection(characters, bomb_directions[k][0], bomb_directions[k][1]);
+                        if(collision_type == 0 && collision_bomb[k] == -1){
+                            drawGameAsset(player1.bomb[i].frame-4, bomb_directions[k][0],bomb_directions[k][1],explosion_width,explosion_height,bomb_explosion_allArray);
                         }else{
                             collision_bomb[k] = k;
-                            drawGameAsset(7, bomb_directions[k][0],bomb_directions[k][1],48,48,bomb_explosion_allArray);  // blank if hit
                         }
                     }
                 }
+                
             }
         }
         
