@@ -1,22 +1,35 @@
 #include "character.h"
 #include "map.h"
 #include "wall_block.h"
-#define SCREEN_WIDTH_OFFSET 12
+#include "../uart/uart1.h"
 
+void draw_map(int map[][28]){
+    for(int i = 0; i < 18; i++){
+        map[i][0]= 1;
+        map[i][23] = 1;
 
-
-void draw_map(){
-    int j =1;
-    for(int i = 0; i < 23; i++){
-        if(i < 16){
-            drawGameAsset(0, 0 + SCREEN_WIDTH_OFFSET,i*48,38,46,wall_block_allArray);
-            drawGameAsset(0, 986 - SCREEN_WIDTH_OFFSET,i*48,38,46,wall_block_allArray);
-            //drawRectARGB32(0,i*40,40,40,0x00AA0000,1);
-            //drawRectARGB32(986,i*40,40,40,0x00AA0000,1);
-        }
-        drawGameAsset(0, j*40 + SCREEN_WIDTH_OFFSET,0,38,46,wall_block_allArray);
-        drawGameAsset(0, j*40 + SCREEN_WIDTH_OFFSET,720,38,46,wall_block_allArray);
-        j++;
+        drawGameAsset(0, 0 + SCREEN_WIDTH_OFFSET,i*48 ,38,46,wall_block_allArray);
+        drawGameAsset(0, 986 - SCREEN_WIDTH_OFFSET,i*48,38,46,wall_block_allArray);
+        //drawRectARGB32(0,i*40,40,40,0x00AA0000,1);
+        //drawRectARGB32(986,i*40,40,40,0x00AA0000,1);
     }
-    
-}   
+    for(int i = 0; i < 25; i++){
+        map[2][i] = 1;
+        map[15][i] = 1;
+        drawGameAsset(0, i*40 + SCREEN_WIDTH_OFFSET,0 + SCREEN_HEIGHT_OFFSET,38,46,wall_block_allArray);
+        drawGameAsset(0, i*40 + SCREEN_WIDTH_OFFSET,720,38,46,wall_block_allArray);
+    }
+
+}
+
+
+
+void draw_map_from_array(int map[][28]){
+        for(int i = 0; i < 18; i++){
+            for(int j = 0; j < 28; j++){
+                if(map[i][j] == 1){
+                    drawGameAsset(0, j*block_width,i*block_height,block_width,block_height,wall_block_allArray);
+                }
+            }
+        }
+}

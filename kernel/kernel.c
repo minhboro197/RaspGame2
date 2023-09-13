@@ -12,6 +12,17 @@ void *memcpy(void *dest, const void *src, int count) {
     return dest;
 }
 
+void *memset(void *dest, int value, int count) {
+    unsigned char *ptr = (unsigned char *)dest;
+    unsigned char byteValue = (unsigned char)value;
+
+    for (int i = 0; i < count; i++) {
+        ptr[i] = byteValue;
+    }
+
+    return dest;
+}
+
 
 void npc_plant_bomb(human npc, human player){
     if(absolute(npc.x - player.x) < 50 && absolute(npc.y - player.y) < 50){
@@ -19,6 +30,15 @@ void npc_plant_bomb(human npc, human player){
     }
 }
 
+void print_map(int map[][28]){
+                for (int i = 0; i < 18; i++){
+                for(int j = 0; j< 28; j++){
+                    uart_dec(map[i][j]);
+                    uart_sendc(',');
+                }
+                uart_sendc('\n');
+            }       
+}
 
 
 void main(){
@@ -36,10 +56,11 @@ void main(){
         {'a',100}
     };
     
-
-    human player1 = character1_init(50,50);
-    human npc = character1_init(100,100);
-    human npc2 = character1_init(500,500);
+    // wall block width and height is 38 and 46
+    // span npc in the below formar
+    human player1 = character1_init(38,46*3);
+    human npc = character1_init(38,46*9);
+    human npc2 = character1_init(38*5,46*9);
     
     // set up serial console
     uart_init();
@@ -53,27 +74,49 @@ void main(){
     set_wait_timer(1, 10000);   // set 10ms
     int bomb_delay = 0;
     int once = 0;
+
+    int map2[][28] = {
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    };
     while(1) {
         if(once == 0){
             once = 1;
-            draw_map();
+            draw_map_from_array(map2);
         }
+        
         human characters[] = {player1,npc,npc2};
         char c =  getUart();
-        player1 = controlCharater(characters,player1, c);
+        player1 = controlCharater(characters,player1, c, 0,tracking_player_on_map(player1, map2, c));
         int timer = set_wait_timer(0,0);
         //uart_dec(player1.bomb_num);
         //uart_sendc('\n');
         
         if(timer){
-            if((timer %10) == 0){   // every 100ms
-                npc = move(characters,npc, npc1_moves, sizeof(npc1_moves) / sizeof(npc1_moves[0]));
-                npc = controlCharater(characters,npc, 't'); // refresh character
-                npc2 = move(characters,npc2, npc2_moves, sizeof(npc2_moves) / sizeof(npc2_moves[0]));
-                npc2 = controlCharater(characters,npc2, 't'); // refresh character
+            if((timer % 10) == 0){   // every 100ms
+                // 
+                npc = move(characters,npc, npc1_moves, sizeof(npc1_moves) / sizeof(npc1_moves[0]),0);
+                npc = controlCharater(characters,npc, 't',1,0); // refresh character
+                npc2 = move(characters,npc2, npc2_moves, sizeof(npc2_moves) / sizeof(npc2_moves[0]),0);
+                npc2 = controlCharater(characters,npc2, 't',1,0); // refresh character
 
-                npc_plant_bomb(npc,player1);
-                npc_plant_bomb(npc2,player1);
+                //npc_plant_bomb(npc,player1);
+                //npc_plant_bomb(npc2,player1);
 
 
                 for(int i = 0; i < player1.bomb_num; i ++){
@@ -92,6 +135,5 @@ void main(){
             
             set_wait_timer(1, 10000);   // reset 10ms timer
         }
-
     }
 }

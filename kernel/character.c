@@ -5,6 +5,34 @@
 #include "framebf.h"
 #include "bomb_explosion.h"
 
+
+// Track player on the map and collison dection with walls
+int tracking_player_on_map(human player, int map[][28], char c){
+    int player_width = 25;
+    int player_height = 41;
+    int clearance = 5;
+
+    if(c=='a'){
+        if(map[(player.y+player_height)/46][(player.x-clearance)/38] == 1 || map[(player.y)/46][(player.x-clearance)/38] == 1){
+            return 1;
+        }
+    }else if(c == 'd'){
+        if(map[(player.y+player_height)/46][(player.x+player_width+clearance)/38] == 1 || (map[(player.y)/46][(player.x+player_width+clearance)/38] == 1)){
+            return 1;
+        }
+    }else if(c == 'w'){
+        if(map[(player.y-clearance)/46][(player.x+player_width)/38] == 1 || map[(player.y-clearance)/46][(player.x)/38] == 1){
+            return 1;
+        }
+    }else if(c == 's'){
+        if(map[(player.y+player_height+clearance)/46][(player.x+player_width)/38] == 1 || map[(player.y+player_height+clearance)/46][(player.x)/38] == 1){
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 int collision_detection(human humans[], unsigned int object_x, unsigned int object_y){
    for(int i = 0; i < 3; i++){
         if(absolute(humans[i].x - object_x) < 40 && absolute(humans[i].y - object_y) < 40){
@@ -82,9 +110,6 @@ human character1_init(int x, int y){
     return character1;
 }
 
-int frame = 0;
-int offset_move = 0;
-
 unsigned int absolute(int num){
     if(num < 0){
         num = num * -1;
@@ -94,53 +119,49 @@ unsigned int absolute(int num){
 }
 int bomb_planted = 0;
 
-human controlCharater(human characters[],human player1, char c){
-    if(c == 'd'){
-        
-        player1.offset = player1.moveright_frame_offset + frame;
+int frame = 0;
+int offset_move = 0;
+human controlCharater(human characters[],human player1, char c,int is_npc, int is_collision){
+    if(is_collision){
+       player1.x = player1.prior_x;
+       player1.y = player1.prior_y;
+       return player1;
+    }
+    if(!is_npc){
+        player1.prior_x = player1.x;
+       player1.prior_y = player1.y;
+    }
+    
+    if(c == 'd'|| c == 'a' || c == 'w' || c == 's'){
         frame ++;
         if(frame > 8){
             frame = 0;
         }
-        drawRectARGB32(player1.x,player1.y,player1.x+35,player1.y + 60,0x00000000,1);
+        drawRectARGB32(player1.x,player1.y,player1.x+mage_width,player1.y + mage_height,0x00000000,1);
+    } 
+    if(c == 'd'){  
+        player1.offset = player1.moveright_frame_offset + frame;
         player1.x += 5;
     }else if(c == 'a'){
         player1.offset = player1.moveleft_frame_offset + frame;
-        frame++;
-        if(frame > 8){
-            frame = 0;
-        }
-        drawRectARGB32(player1.x,player1.y,player1.x+35,player1.y + 60,0x00000000,1);
         player1.x -= 5;
     }else if(c == 'w'){
         player1.offset = player1.moveup_frame_offset + frame;
-        frame++;
-        if(frame > 8){
-            frame = 0;
-        }
-        drawRectARGB32(player1.x,player1.y,player1.x+35,player1.y + 60,0x00000000,1);
         player1.y -= 5;
     }else if(c == 's'){
         player1.offset = player1.movedown_frame_offset + frame;
-        frame++;
-        if(frame > 8){
-            frame = 0;
-        }
-        drawRectARGB32(player1.x,player1.y,player1.x+35,player1.y + 60,0x00000000,1);
         player1.y += 5;
     }else if(c == 'j' || player1.bomb_num){
         player1 = plant_bomb(characters,player1,c);
     }
     
-    drawGameAsset(player1.offset, player1.x, player1.y, 35,58, mage_walking_allArray);
-    
+    drawGameAsset(player1.offset, player1.x, player1.y, mage_width,mage_height, mage_walking_allArray);
     
     return player1;
 }
 
-human move(human players[],human npc,moves moves[], unsigned int move_size){
-    
-    human temp = controlCharater(players,npc, moves[npc.move_index].direction);
+human move(human players[],human npc,moves moves[], unsigned int move_size, int is_collision){
+    human temp = controlCharater(players,npc, moves[npc.move_index].direction, 1, is_collision);
     
     if(absolute(temp.x - temp.prior_x) == moves[temp.move_index].distance){
         temp.prior_x = temp.x;
