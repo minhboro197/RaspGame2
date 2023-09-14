@@ -15,28 +15,28 @@ int tracking_player_on_map(human player, int map[][28], char c)
 
     if (c == 'a')
     {
-        if (map[(player.y + player_height) / 46][(player.x - clearance) / 38] == 1 || map[(player.y) / 46][(player.x - clearance) / 38] == 1)
+        if (map[(player.y + player_height) / 46][(player.x - clearance) / 38] > 0 || map[(player.y) / 46][(player.x - clearance) / 38] > 0)
         {
             return 1;
         }
     }
     else if (c == 'd')
     {
-        if (map[(player.y + player_height) / 46][(player.x + player_width + clearance) / 38] == 1 || (map[(player.y) / 46][(player.x + player_width + clearance) / 38] == 1))
+        if (map[(player.y + player_height) / 46][(player.x + player_width + clearance) / 38] > 0 || (map[(player.y) / 46][(player.x + player_width + clearance) / 38] > 0))
         {
             return 1;
         }
     }
     else if (c == 'w')
     {
-        if (map[(player.y - clearance) / 46][(player.x + player_width) / 38] == 1 || map[(player.y - clearance) / 46][(player.x) / 38] == 1)
+        if (map[(player.y - clearance) / 46][(player.x + player_width) / 38] > 0 || map[(player.y - clearance) / 46][(player.x) / 38] > 0)
         {
             return 1;
         }
     }
     else if (c == 's')
     {
-        if (map[(player.y + player_height + clearance) / 46][(player.x + player_width) / 38] == 1 || map[(player.y + player_height + clearance) / 46][(player.x) / 38] == 1)
+        if (map[(player.y + player_height + clearance) / 46][(player.x + player_width) / 38] > 0 || map[(player.y + player_height + clearance) / 46][(player.x) / 38] > 0)
         {
             return 1;
         }
@@ -46,13 +46,14 @@ int tracking_player_on_map(human player, int map[][28], char c)
 }
 
 int collision_detection(human humans[], unsigned int object_x, unsigned int object_y){
-   for(int i = 0; i < 3; i++){
-        if(absolute(humans[i].x - object_x) < 38 && absolute(humans[i].y - object_y) < 46){
-            
+    int bounding_box[][2] = {{object_y, object_x},
+                            {object_y, object_x + 25},
+                            {object_y + 25, object_x},
+                            {object_y + 25, object_x +25}};
+    for(int i =0; i < 4; i++){
+        if(map2[bounding_box[i][0]/46][bounding_box[i][1]/38] > 0){
+            return 2;
         }
-    }
-    if(map2[object_y/46][object_x/38] > 0){
-        return 2;
     }
     return 0;
 }
