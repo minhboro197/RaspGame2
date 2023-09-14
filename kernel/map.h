@@ -3,4 +3,4 @@
 #define block_width 38
 #define block_height 46
 void draw_map_from_array(int map[][28]);
-void draw_map(int map[][28]);
+void draw_stats();

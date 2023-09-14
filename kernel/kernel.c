@@ -168,7 +168,8 @@ void main()
     uart_puts("\n\nHello World!\n");
     // Initialize frame buffer
     framebf_init();
-
+    //display heart
+    draw_stats();
     // echo everything back
     play_game();
 }

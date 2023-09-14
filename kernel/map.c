@@ -2,27 +2,7 @@
 #include "map.h"
 #include "wall_block.h"
 #include "../uart/uart1.h"
-
-void draw_map(int map[][28])
-{
-    for (int i = 0; i < 18; i++)
-    {
-        map[i][0] = 1;
-        map[i][23] = 1;
-
-        drawGameAsset(0, 0 + SCREEN_WIDTH_OFFSET, i * 48, 38, 46, wall_block_allArray);
-        drawGameAsset(0, 986 - SCREEN_WIDTH_OFFSET, i * 48, 38, 46, wall_block_allArray);
-        // drawRectARGB32(0,i*40,40,40,0x00AA0000,1);
-        // drawRectARGB32(986,i*40,40,40,0x00AA0000,1);
-    }
-    for (int i = 0; i < 25; i++)
-    {
-        map[2][i] = 1;
-        map[15][i] = 1;
-        drawGameAsset(0, i * 40 + SCREEN_WIDTH_OFFSET, 0 + SCREEN_HEIGHT_OFFSET, 38, 46, wall_block_allArray);
-        drawGameAsset(0, i * 40 + SCREEN_WIDTH_OFFSET, 720, 38, 46, wall_block_allArray);
-    }
-}
+#include "stat.h"
 
 void draw_map_from_array(int map[][28])
 {
@@ -35,5 +15,15 @@ void draw_map_from_array(int map[][28])
                 drawGameAsset(map[i][j] - 1, j * block_width, i * block_height, block_width, block_height, wall_block_allArray);
             }
         }
+    }
+}
+
+void draw_stats() {
+    int heart_count = 5;
+    int spacing = 5; // Spacing between each heart
+    int heart_width = 30; // Width of the heart icon
+    for (int i = 0; i < heart_count; i++) {
+        int x_position = i * (heart_width + spacing);
+        drawGameAsset(0, x_position, 0, heart_width, 30, heart_iconallArray);
     }
 }
