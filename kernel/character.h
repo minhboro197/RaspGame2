@@ -1,5 +1,6 @@
 
-typedef struct{
+typedef struct
+{
     volatile unsigned int x;
     volatile unsigned int y;
     volatile unsigned int frame;
@@ -7,7 +8,8 @@ typedef struct{
     volatile unsigned int delay;
 } Explosion;
 
-typedef struct{
+typedef struct
+{
     volatile unsigned int x;
     volatile unsigned int y;
     volatile unsigned int frame;
@@ -16,13 +18,14 @@ typedef struct{
     Explosion explosion[5];
 } Bombs;
 
-typedef struct {
+typedef struct
+{
     char direction;
     int distance;
-}moves;
+} moves;
 
-
-typedef struct {
+typedef struct
+{
     volatile unsigned int prior_x;
     volatile unsigned int prior_y;
     volatile unsigned int x;
@@ -40,11 +43,10 @@ typedef struct {
 
 } human;
 
-
-int collision_detection(human humans[],unsigned int object_x, unsigned int object_y);
-void drawGameAsset(int frame, unsigned int offset_x,unsigned int offset_y, unsigned int width, unsigned int height, const unsigned long* frame_array[]);
+int collision_detection(human humans[], unsigned int object_x, unsigned int object_y);
+void drawGameAsset(int frame, unsigned int offset_x, unsigned int offset_y, unsigned int width, unsigned int height, const unsigned long *frame_array[]);
 human character1_init(int x, int y);
 unsigned int absolute(int num);
-human controlCharater(human players[],human player1, char c,int is_npc, int is_collision);
-human move(human players[],human npc,moves moves[], unsigned int move_size,int is_collision);
+human controlCharater(human players[], human player1, char c, int is_npc, int is_collision);
+human move(human players[], human npc, moves moves[], unsigned int move_size, int is_collision);
 int tracking_player_on_map(human player, int map[][28], char c);
