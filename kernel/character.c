@@ -46,6 +46,15 @@ int tracking_player_on_map(human player, int map[][28], char c)
 }
 
 int collision_detection(human humans[], unsigned int object_x, unsigned int object_y){
+
+    for(int i = 0; i < 3; i++){
+        if(absolute(object_x - humans[i].x) < 28 && absolute(object_y - humans[i].y) < 29){
+            uart_dec(absolute(object_y - humans[i].y));
+            humans[i].health -= 5;
+            return 1;
+        }
+    }
+
     int bounding_box[][2] = {{object_y, object_x},
                             {object_y, object_x + 25},
                             {object_y + 25, object_x},
@@ -56,6 +65,15 @@ int collision_detection(human humans[], unsigned int object_x, unsigned int obje
         }
     }
     return 0;
+}
+
+void player_take_damage(){
+    for(int i = 0; i < 3; i++){
+        if(absolute(object_x - humans[i].x) < 28 && absolute(object_y - humans[i].y) < 29){
+            uart_dec(absolute(object_y - humans[i].y));
+            return 1;
+        }
+    }
 }
 
 void drawGameAsset(int frame, unsigned int offset_x, unsigned int offset_y, unsigned int width, unsigned int height, const unsigned long *frame_array[])
