@@ -67,15 +67,6 @@ int collision_detection(human humans[], unsigned int object_x, unsigned int obje
     return 0;
 }
 
-void player_take_damage(){
-    for(int i = 0; i < 3; i++){
-        if(absolute(object_x - humans[i].x) < 28 && absolute(object_y - humans[i].y) < 29){
-            uart_dec(absolute(object_y - humans[i].y));
-            return 1;
-        }
-    }
-}
-
 void drawGameAsset(int frame, unsigned int offset_x, unsigned int offset_y, unsigned int width, unsigned int height, const unsigned long *frame_array[])
 {
 
