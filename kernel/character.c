@@ -15,21 +15,21 @@ int tracking_player_on_map(human player, int map[][28], char c)
 
     if (c == 'a')
     {
-        if (map[(player.y + player_height) / 46][(player.x - clearance) / 38] > 0 || map[(player.y) / 46][(player.x - clearance) / 38] > 0)
+        if (map[(player.y + player_height) / 46][(player.x - (clearance+3)) / 38] > 0 || map[(player.y) / 46][(player.x - (clearance+3)) / 38] > 0)
         {
             return 1;
         }
     }
     else if (c == 'd')
     {
-        if (map[(player.y + player_height) / 46][(player.x + player_width + clearance) / 38] > 0 || (map[(player.y) / 46][(player.x + player_width + clearance) / 38] > 0))
+        if (map[(player.y + player_height) / 46][(player.x + player_width + (clearance+3)) / 38] > 0 || (map[(player.y) / 46][(player.x + player_width + (clearance+3)) / 38] > 0))
         {
             return 1;
         }
     }
     else if (c == 'w')
     {
-        if (map[(player.y - clearance) / 46][(player.x + player_width) / 38] > 0 || map[(player.y - clearance) / 46][(player.x) / 38] > 0)
+        if (map[(player.y - clearance) / 46][(player.x + player_width + clearance) / 38] > 0 || map[(player.y - clearance) / 46][(player.x) / 38] > 0)
         {
             return 1;
         }
