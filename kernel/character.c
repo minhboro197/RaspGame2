@@ -45,11 +45,15 @@ int tracking_player_on_map(human player, int map[][28], char c)
     return 0;
 }
 
-int collision_detection(human humans[], unsigned int object_x, unsigned int object_y)
-{
-    if (map2[object_y / 46][object_x / 38] > 0)
-    {
-        return 2;
+int collision_detection(human humans[], unsigned int object_x, unsigned int object_y){
+    int bounding_box[][2] = {{object_y, object_x},
+                            {object_y, object_x + 25},
+                            {object_y + 25, object_x},
+                            {object_y + 25, object_x +25}};
+    for(int i =0; i < 4; i++){
+        if(map2[bounding_box[i][0]/46][bounding_box[i][1]/38] > 0){
+            return 2;
+        }
     }
     return 0;
 }
