@@ -97,7 +97,7 @@ human plant_bomb(human characters[], human player1, char c)
             drawGameAsset(player1.bomb[i].frame, player1.bomb[i].x, player1.bomb[i].y, bomb_width, bomb_height, bomb_allArray);
             if (player1.bomb[i].frame > 4)
             {
-                for (int j = 0; j < 4; j++)
+                for (int j = 0; j < player1.range+1; j++)
                 { // 4 here is max range change this later
                     int bomb_directions[4][2] = {{player1.bomb[i].x, player1.bomb[i].y - 46 * j},
                                                  {player1.bomb[i].x, player1.bomb[i].y + 46 * j},
@@ -138,6 +138,8 @@ human character1_init(int x, int y)
     character1.move_index = 0;
     character1.bomb_num = 0;
     character1.health = 4;
+    character1.damage = 5;
+    character1.range = 2;
     return character1;
 }
 
@@ -150,10 +152,8 @@ unsigned int absolute(int num)
     }
     return num;
 }
-int bomb_planted = 0;
 
 int frame = 0;
-int offset_move = 0;
 human controlCharater(human characters[], human player1, char c, int is_npc, int is_collision)
 {
     if (is_collision)
