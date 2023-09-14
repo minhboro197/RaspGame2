@@ -47,8 +47,8 @@ typedef struct
 
 int collision_detection(human humans[], unsigned int object_x, unsigned int object_y);
 void drawGameAsset(int frame, unsigned int offset_x, unsigned int offset_y, unsigned int width, unsigned int height, const unsigned long *frame_array[]);
-human character1_init(int x, int y);
+human character1_init(int x, int y, int move_offset);
 unsigned int absolute(int num);
-human controlCharater(human players[], human player1, char c, int is_npc, int is_collision);
-human move(human players[], human npc, moves moves[], unsigned int move_size, int is_collision);
+human controlCharater(human players[], human player1, char c, int is_npc, int is_collision,int frame_max);
+human move(human players[], human npc, moves moves[], unsigned int move_size, int is_collision,int frame_max);
 int tracking_player_on_map(human player, int map[][28], char c);

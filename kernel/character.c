@@ -132,7 +132,7 @@ human plant_bomb(human characters[], human player1, char c)
     return player1;
 }
 
-human character1_init(int x, int y)
+human character1_init(int x, int y, int moveup_offset)
 {
     human character1;
     character1.prior_x = x;
@@ -140,9 +140,9 @@ human character1_init(int x, int y)
     character1.x = x;
     character1.y = y;
     character1.moveup_frame_offset = 0;
-    character1.movedown_frame_offset = 18;
-    character1.moveleft_frame_offset = 27;
-    character1.moveright_frame_offset = 9;
+    character1.movedown_frame_offset = moveup_offset*2;
+    character1.moveleft_frame_offset = moveup_offset*3;
+    character1.moveright_frame_offset = moveup_offset*1;
     character1.offset = 8;
     character1.move_index = 0;
     character1.bomb_num = 0;
@@ -163,7 +163,7 @@ unsigned int absolute(int num)
 }
 
 int frame = 0;
-human controlCharater(human characters[], human player1, char c, int is_npc, int is_collision)
+human controlCharater(human characters[], human player1, char c, int is_npc, int is_collision, int frame_max)
 {
     if (is_collision)
     {
@@ -180,7 +180,7 @@ human controlCharater(human characters[], human player1, char c, int is_npc, int
     if (c == 'd' || c == 'a' || c == 'w' || c == 's')
     {
         frame++;
-        if (frame > 8)
+        if (frame > frame_max)
         {
             frame = 0;
         }
@@ -216,9 +216,9 @@ human controlCharater(human characters[], human player1, char c, int is_npc, int
     return player1;
 }
 
-human move(human players[], human npc, moves moves[], unsigned int move_size, int is_collision)
+human move(human players[], human npc, moves moves[], unsigned int move_size, int is_collision, int max_frame)
 {
-    human temp = controlCharater(players, npc, moves[npc.move_index].direction, 1, is_collision);
+    human temp = controlCharater(players, npc, moves[npc.move_index].direction, 1, is_collision,max_frame);
 
     if (absolute(temp.x - temp.prior_x) == moves[temp.move_index].distance)
     {

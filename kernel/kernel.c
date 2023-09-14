@@ -64,9 +64,9 @@ void play_game()
 
     // wall block width and height is 38 and 46
     // span npc in the below formar
-    human player1 = character1_init(38, 46 * 3);
-    human npc = character1_init(38 * 10, 46 * 10);
-    human npc2 = character1_init(38 * 5, 46 * 9);
+    human player1 = character1_init(38, 46 * 3, 9);
+    human npc = character1_init(38 * 10, 46 * 10, 9);
+    human npc2 = character1_init(38 * 5, 46 * 9, 9);
     // 1 seconds = 1000000
     set_wait_timer(1, 10000); // set 10ms
     int bomb_delay = 0;
@@ -120,7 +120,7 @@ void play_game()
 
         human characters[] = {player1, npc, npc2};
         char c = getUart();
-        player1 = controlCharater(characters, player1, c, 0, tracking_player_on_map(player1, map2, c));
+        player1 = controlCharater(characters, player1, c, 0, tracking_player_on_map(player1, map2, c),8);
         int timer = set_wait_timer(0, 0);
         // uart_dec(player1.bomb_num);
         // uart_sendc('\n');
@@ -130,10 +130,10 @@ void play_game()
             if ((timer % 10) == 0)
             { // every 100ms
 
-                npc = move(characters, npc, npc1_moves, sizeof(npc1_moves) / sizeof(npc1_moves[0]), 0);
-                npc = controlCharater(characters, npc, 't', 1, 0); // refresh character
-                npc2 = move(characters, npc2, npc2_moves, sizeof(npc2_moves) / sizeof(npc2_moves[0]), 0);
-                npc2 = controlCharater(characters, npc2, 't', 1, 0); // refresh character
+                npc = move(characters, npc, npc1_moves, sizeof(npc1_moves) / sizeof(npc1_moves[0]), 0,8);
+                npc = controlCharater(characters, npc, 't', 1, 0,8); // refresh character
+                npc2 = move(characters, npc2, npc2_moves, sizeof(npc2_moves) / sizeof(npc2_moves[0]), 0,8);
+                npc2 = controlCharater(characters, npc2, 't', 1, 0,8); // refresh character
 
                 // npc_plant_bomb(npc,player1);
                 // npc_plant_bomb(npc2,player1);
