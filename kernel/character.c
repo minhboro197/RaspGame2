@@ -34,6 +34,11 @@ int tracking_player_on_map(human player, int map[][28], char c){
 }
 
 int collision_detection(human humans[], unsigned int object_x, unsigned int object_y){
+   for(int i = 0; i < 3; i++){
+        if(absolute(humans[i].x - object_x) < 38 && absolute(humans[i].y - object_y) < 46){
+            
+        }
+    }
     if(map2[object_y/46][object_x/38] > 0){
         return 2;
     }
