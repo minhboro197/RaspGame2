@@ -9,7 +9,7 @@ typedef struct
 } Explosion;
 
 typedef struct
-{
+{   
     volatile unsigned int x;
     volatile unsigned int y;
     volatile unsigned int frame;
@@ -25,7 +25,11 @@ typedef struct
 } moves;
 
 typedef struct
-{
+{   
+    volatile unsigned int health;
+    volatile unsigned int damage;
+    volatile unsigned int range;
+
     volatile unsigned int prior_x;
     volatile unsigned int prior_y;
     volatile unsigned int x;
@@ -39,8 +43,6 @@ typedef struct
     unsigned int bomb_num;
     int clone;
     Bombs bomb[5];
-    unsigned int health;
-
 } human;
 
 int collision_detection(human humans[], unsigned int object_x, unsigned int object_y);
