@@ -1,7 +1,7 @@
 //npc gio k xuyen tuong nx nhma cai movement hoi xl ti
-human move(human players[], human npc, moves moves[], unsigned int move_size, int is_collision)
+human move(human players[], human npc, moves moves[], unsigned int move_size, int is_collision, int max_frame)
 {
-    human temp = controlCharater(players, npc, moves[npc.move_index].direction, 1, tracking_player_on_map(npc, map2, moves[npc.move_index].direction));
+    human temp = controlCharater(players, npc, moves[npc.move_index].direction, 0, tracking_player_on_map(npc, map2, moves[npc.move_index].direction,max_frame));
      //npc = controlCharater(characters, npc, 'a', 0, tracking_player_on_map(npc, map2, 'a'));
                
                 
