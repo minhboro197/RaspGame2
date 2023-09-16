@@ -1,7 +1,6 @@
 
 #include "character.h"
 #include "bomb.h"
-#include "magewalking.h"
 #include "framebf.h"
 #include "bomb_explosion.h"
 #include "map_array.h"
@@ -45,13 +44,20 @@ int tracking_player_on_map(human player, int map[][28], char c)
     return 0;
 }
 
+int npc_hit_detection(human humans[], unsigned int object_x, unsigned int object_y){
+    if(absolute(object_x - humans[0].x) < 28 && absolute(object_y - humans[0].y) < 29){
+        return 1;
+    }
+    return 0;
+}
+
 int collision_detection(human humans[], unsigned int object_x, unsigned int object_y){
 
     for(int i = 0; i < 3; i++){
         if(absolute(object_x - humans[i].x) < 28 && absolute(object_y - humans[i].y) < 29){
-            uart_dec(absolute(object_y - humans[i].y));
-            humans[i].health -= 5;
-            return 1;
+            //uart_dec(absolute(object_y - humans[i].y));
+            //humans[i].health -= 5;
+            return i;
         }
     }
 
@@ -61,10 +67,10 @@ int collision_detection(human humans[], unsigned int object_x, unsigned int obje
                             {object_y + 25, object_x +25}};
     for(int i =0; i < 4; i++){
         if(map2[bounding_box[i][0]/46][bounding_box[i][1]/38] > 0){
-            return 2;
+            return -1;
         }
     }
-    return 0;
+    return -2;
 }
 
 void drawGameAsset(int frame, unsigned int offset_x, unsigned int offset_y, unsigned int width, unsigned int height, const unsigned long *frame_array[])
@@ -82,7 +88,7 @@ void drawGameAsset(int frame, unsigned int offset_x, unsigned int offset_y, unsi
 }
 
 int ignore_collision_after_explosion = 0;
-human plant_bomb(human characters[], human player1, char c)
+human plant_bomb(human characters[], human player1, char c, int *hit_player)
 {
     if (c == 'j')
     {
@@ -116,13 +122,16 @@ human plant_bomb(human characters[], human player1, char c)
                     for (int k = 0; k < 4; k++)
                     {
                         int collision_type = collision_detection(characters, bomb_directions[k][0], bomb_directions[k][1]);
-                        if (collision_type == 0 && collision_bomb[k] == -1)
+                        if (collision_type == -2 && collision_bomb[k] == -1)
                         {
                             drawGameAsset(player1.bomb[i].frame - 4, bomb_directions[k][0], bomb_directions[k][1], explosion_width, explosion_height, bomb_explosion_allArray);
                         }
                         else
                         {
                             collision_bomb[k] = k;
+                            if(collision_type != -1 && collision_type != -2){
+                                *hit_player = collision_type;
+                            }
                         }
                     }
                 }
@@ -132,9 +141,13 @@ human plant_bomb(human characters[], human player1, char c)
     return player1;
 }
 
-human character1_init(int x, int y, int moveup_offset)
+human character1_init(int x, int y, int moveup_offset, int is_npc,unsigned int frame_max, unsigned int frame_width, unsigned int frame_height)
 {
     human character1;
+    character1.frame_width = frame_width;
+    character1.frame_height = frame_height;
+    character1.frame_max = frame_max;
+    character1.is_npc = is_npc;
     character1.prior_x = x;
     character1.prior_y = y;
     character1.x = x;
@@ -163,7 +176,7 @@ unsigned int absolute(int num)
 }
 
 int frame = 0;
-human controlCharater(human characters[], human player1, char c, int is_npc, int is_collision, int frame_max)
+human controlCharater(human characters[], human player1, char c, int is_collision, int *hit_player, const unsigned long *frame_array[])
 {
     if (is_collision)
     {
@@ -171,7 +184,7 @@ human controlCharater(human characters[], human player1, char c, int is_npc, int
         player1.y = player1.prior_y;
         return player1;
     }
-    if (!is_npc)
+    if (!player1.is_npc)
     {
         player1.prior_x = player1.x;
         player1.prior_y = player1.y;
@@ -180,11 +193,11 @@ human controlCharater(human characters[], human player1, char c, int is_npc, int
     if (c == 'd' || c == 'a' || c == 'w' || c == 's')
     {
         frame++;
-        if (frame > frame_max)
+        if (frame > player1.frame_max)
         {
             frame = 0;
         }
-        drawRectARGB32(player1.x, player1.y, player1.x + mage_width, player1.y + mage_height, 0x00000000, 1);
+        drawRectARGB32(player1.x, player1.y, player1.x + player1.frame_width, player1.y + player1.frame_height, 0x00000000, 1);
     }
     if (c == 'd')
     {
@@ -208,17 +221,19 @@ human controlCharater(human characters[], human player1, char c, int is_npc, int
     }
     else if (c == 'j' || player1.bomb_num)
     {
-        player1 = plant_bomb(characters, player1, c);
+        player1 = plant_bomb(characters, player1, c, hit_player);
+    }else if (c == 't'){
+       player1.offset = 36;
     }
 
-    drawGameAsset(player1.offset, player1.x, player1.y, mage_width, mage_height, mage_walking_allArray);
+    drawGameAsset(player1.offset, player1.x, player1.y, player1.frame_width, player1.frame_height, frame_array);
 
     return player1;
 }
 
-human move(human players[], human npc, moves moves[], unsigned int move_size, int is_collision, int max_frame)
+human move(human players[], human npc, moves moves[], unsigned int move_size, int is_collision, int *hit_player, const unsigned long *frame_array[])
 {
-    human temp = controlCharater(players, npc, moves[npc.move_index].direction, 1, is_collision,max_frame);
+    human temp = controlCharater(players, npc, moves[npc.move_index].direction, is_collision, hit_player, frame_array);
 
     if (absolute(temp.x - temp.prior_x) == moves[temp.move_index].distance)
     {
