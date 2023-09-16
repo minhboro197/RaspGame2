@@ -144,6 +144,7 @@ human plant_bomb(human characters[], human player1, char c, int *hit_player)
 human character1_init(int x, int y, int moveup_offset, int is_npc,unsigned int frame_max, unsigned int frame_width, unsigned int frame_height)
 {
     human character1;
+    character1.is_alive = 1;
     character1.frame_width = frame_width;
     character1.frame_height = frame_height;
     character1.frame_max = frame_max;
@@ -177,7 +178,13 @@ unsigned int absolute(int num)
 
 int frame = 0;
 human controlCharater(human characters[], human player1, char c, int is_collision, int *hit_player, const unsigned long *frame_array[])
-{
+{   
+    if(player1.is_alive == 0){
+        drawRectARGB32(player1.x, player1.y, player1.x + player1.frame_width, player1.y + player1.frame_height, 0x00000000, 1);
+        player1.x =500;
+        player1.y =0;
+        return player1;
+    }
     if (is_collision)
     {
         player1.x = player1.prior_x;

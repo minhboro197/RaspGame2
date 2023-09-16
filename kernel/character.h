@@ -26,6 +26,7 @@ typedef struct
 
 typedef struct
 {   
+    volatile int is_alive;
     unsigned int frame_width;
     unsigned int frame_height;
     int is_npc;

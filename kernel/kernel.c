@@ -161,6 +161,9 @@ void play_game()
                     if(characters[i]->got_hit){
                         *characters[i] = controlCharater(characters2, *characters[i],'t', 0, &got_hit_player,mage_walking_allArray);
                         characters[i]->got_hit = 0;
+                        if(characters[i]->health == 0){
+                            characters[i]->is_alive = 0;
+                        }
                         //uart_dec(absolute(characters[i]->health));
                         uart_dec(i);
                         uart_sendc('\n');
