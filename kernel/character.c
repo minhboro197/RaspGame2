@@ -4,7 +4,7 @@
 #include "framebf.h"
 #include "bomb_explosion.h"
 #include "../uart/uart1.h"
-#include "map_array.h"
+
 // Track player on the map and collison dection with walls
 int tracking_player_on_map(human player, int map[][28], char c)
 {
@@ -51,7 +51,7 @@ int npc_hit_detection(human humans[], unsigned int object_x, unsigned int object
     return 0;
 }
 
-int collision_detection(human humans[], unsigned int object_x, unsigned int object_y){
+int collision_detection(int map[][28],human humans[], unsigned int object_x, unsigned int object_y){
 
     for(int i = 0; i < 3; i++){
         if(absolute(object_x - humans[i].x) < 28 && absolute(object_y - humans[i].y) < 29){
@@ -66,7 +66,7 @@ int collision_detection(human humans[], unsigned int object_x, unsigned int obje
                             {object_y + 25, object_x},
                             {object_y + 25, object_x +25}};
     for(int i =0; i < 4; i++){
-        if(map2[bounding_box[i][0]/46][bounding_box[i][1]/38] > 0){
+        if(map[bounding_box[i][0]/46][bounding_box[i][1]/38] > 0){
             return -1;
         }
     }
@@ -88,7 +88,7 @@ void drawGameAsset(int frame, unsigned int offset_x, unsigned int offset_y, unsi
 }
 
 int ignore_collision_after_explosion = 0;
-human plant_bomb(human characters[], human player1, char c, int *hit_player)
+human plant_bomb(int map[][28],human characters[], human player1, char c, int *hit_player)
 {
     if (c == 'j')
     {
@@ -121,7 +121,7 @@ human plant_bomb(human characters[], human player1, char c, int *hit_player)
 
                     for (int k = 0; k < 4; k++)
                     {
-                        int collision_type = collision_detection(characters, bomb_directions[k][0], bomb_directions[k][1]);
+                        int collision_type = collision_detection(map,characters, bomb_directions[k][0], bomb_directions[k][1]);
                         if (collision_type == -2 && collision_bomb[k] == -1)
                         {
                             drawGameAsset(player1.bomb[i].frame - 4, bomb_directions[k][0], bomb_directions[k][1], explosion_width, explosion_height, bomb_explosion_allArray);
@@ -177,7 +177,7 @@ unsigned int absolute(int num)
 }
 
 int frame = 0;
-human controlCharater(human characters[], human player1, char c, int is_collision, int *hit_player, const unsigned long *frame_array[])
+human controlCharater(int map[][28], human characters[], human player1, char c, int is_collision, int *hit_player, const unsigned long *frame_array[])
 {   
     if(player1.is_alive == 0){
         drawRectARGB32(player1.x, player1.y, player1.x + player1.frame_width, player1.y + player1.frame_height, 0x00000000, 1);
@@ -228,7 +228,7 @@ human controlCharater(human characters[], human player1, char c, int is_collisio
     }
     else if (c == 'j' || player1.bomb_num)
     {
-        player1 = plant_bomb(characters, player1, c, hit_player);
+        player1 = plant_bomb(map,characters, player1, c, hit_player);
     }else if (c == 't'){
        player1.offset = 36;
     }
@@ -239,15 +239,15 @@ human controlCharater(human characters[], human player1, char c, int is_collisio
 }
 
 
-human move(human players[], human npc, moves moves[], unsigned int move_size, int is_collision, int *hit_player, const unsigned long *frame_array[])
+human move(int map[][28], human players[], human npc, moves moves[], unsigned int move_size, int is_collision, int *hit_player, const unsigned long *frame_array[])
 {
     //human temp = controlCharater(players, npc, moves[npc.move_index].direction, is_collision, hit_player, frame_array);
-    human temp = controlCharater(players, npc, moves[npc.move_index].direction, tracking_player_on_map(npc, map2, moves[npc.move_index].direction), hit_player, frame_array);
+    human temp = controlCharater(map,players, npc, moves[npc.move_index].direction, tracking_player_on_map(npc, map, moves[npc.move_index].direction), hit_player, frame_array);
     
      //npc = controlCharater(characters, npc, 'a', 0, tracking_player_on_map(npc, map2, 'a'));
                
                 
-    if(tracking_player_on_map(npc, map2, moves[npc.move_index].direction) != 0){
+    if(tracking_player_on_map(npc, map, moves[npc.move_index].direction) != 0){
         temp.move_index = temp.move_index+1;
     }
 

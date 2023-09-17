@@ -5,6 +5,7 @@
 #include "magewalking.h"
 #include "boss/dragons.h"
 #include "./sub_boss/knight.h"      // character.h here
+#include "map_array.h"
 // the compiler randomly ask for memcpy so i included it here
 void *memcpy(void *dest, const void *src, int count)
 {
@@ -69,45 +70,8 @@ void character_take_damage(human *characters[], int *got_hit_player,int *take_da
     int take_damaged_once = 1;
     int got_hit_player = -1;
 void play_game()
-{   
-    int map2[][28] = {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1},
-    {1, 0, 1, 1, 1, 1, 1, 0, 0, 2, 0, 0, 4, 0, 0, 1, 0, 0, 0, 0, 4, 0, 2, 0, 1, 0, 1},
-    {1, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 4, 0, 2, 2, 2, 2, 2, 0, 4, 0, 2, 0, 1, 0, 1},
-    {1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 0, 0, 4, 0, 0, 0, 0, 0, 2, 0, 4, 0, 2, 0, 1, 0, 1},
-    {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 0, 2, 0, 4, 0, 2, 0, 1, 0, 1},
-    {1, 0, 1, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 2, 0, 4, 0, 2, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 3, 0, 2, 0, 4, 0, 2, 0, 1, 0, 1},
-    {1, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 3, 0, 2, 0, 4, 0, 2, 0, 1, 0, 1},
-    {1, 0, 4, 4, 4, 4, 4, 4, 4, 4, 0, 1, 0, 2, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0, 1, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 1, 0, 2, 0, 0, 3, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1},
-    {1, 0, 4, 4, 4, 4, 4, 4, 4, 4, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 4, 4, 4, 4, 4, 4, 4, 0, 3, 0, 2, 2, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1}};
+{  
 
-
-int map3[][28] = {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-    {3, 0, 0, 0, 0, 0, 4, 4, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 3},
-    {3, 0, 2, 2, 2, 0, 4, 0, 0, 3, 0, 2, 2, 2, 0, 4, 2, 2, 2, 4, 0, 2, 2, 2, 0, 3, 3},
-    {3, 0, 0, 0, 2, 0, 4, 0, 2, 4, 0, 2, 0, 0, 0, 4, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3},
-    {4, 4, 4, 0, 2, 0, 4, 0, 2, 0, 0, 0, 0, 2, 4, 4, 2, 4, 0, 2, 4, 2, 2, 0, 3, 0, 4},
-    {3, 0, 0, 0, 2, 0, 3, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 3, 0, 3},
-    {3, 0, 3, 0, 2, 3, 3, 3, 3, 3, 3, 0, 3, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 3},
-    {3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3},
-    {3, 0, 3, 3, 3, 3, 3, 3, 3, 3, 0, 3, 3, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 3},
-    {3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3},
-    {2, 2, 2, 2, 2, 0, 4, 4, 4, 0, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0, 2, 2, 2, 2, 2, 2},
-    {3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0, 0, 3},
-    {3, 0, 3, 0, 4, 4, 0, 0, 3, 3, 3, 3, 3, 0, 3, 3, 3, 3, 0, 4, 4, 4, 4, 4, 4, 0, 3},
-    {3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3},
-    {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}};
     moves npc1_moves[] = {
         {'d', 85},
         {'a', 100},
@@ -146,7 +110,7 @@ int map3[][28] = {
         
         char c = getUart();
 
-        *characters[0] = controlCharater(characters2, *characters[0], c, tracking_player_on_map(*characters[0], map2, c),&got_hit_player, mage_walking_allArray);
+        *characters[0] = controlCharater(map2,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map2, c),&got_hit_player, mage_walking_allArray);
         
         character_take_damage(&characters,&got_hit_player,&take_damaged_once);
 
@@ -159,7 +123,7 @@ int map3[][28] = {
                 
                 for(int i = 0; i< 3; i++){
                     if(characters[i]->got_hit){
-                        *characters[i] = controlCharater(characters2, *characters[i],'t', 0, &got_hit_player,mage_walking_allArray);
+                        *characters[i] = controlCharater(map2,characters2, *characters[i],'t', 0, &got_hit_player,mage_walking_allArray);
                         characters[i]->got_hit = 0;
                         if(characters[i]->health == 0){
                             characters[i]->is_alive = 0;
@@ -169,7 +133,7 @@ int map3[][28] = {
                         uart_sendc('\n');
                     }else{
                         if(i>0){    // exclude player
-                            *characters[i] = move(characters2, *characters[i], all_npc_moves[i-1], sizeof(npc1_moves) / sizeof(npc1_moves[0]), 0,&got_hit_player,mage_walking_allArray); 
+                            *characters[i] = move(map2,characters2, *characters[i], all_npc_moves[i-1], sizeof(npc1_moves) / sizeof(npc1_moves[0]), 0,&got_hit_player,mage_walking_allArray); 
                         }
                     }
 
@@ -204,24 +168,6 @@ int map3[][28] = {
 
 void sub_boss(){
     
-    int map4[][28] = {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
     
     human player1 = character1_init(38, 46 * 3, 9,0,8,mage_width,mage_height);
     human knight1 = character1_init(38 * 3, 46 * 5, 9,1,8,59,72);
@@ -250,7 +196,7 @@ void sub_boss(){
 
     char c = getUart();
 
-    *characters[0] = controlCharater(characters2, *characters[0], c, tracking_player_on_map(*characters[0], map4, c),&got_hit_player, mage_walking_allArray);
+    *characters[0] = controlCharater(map4,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map4, c),&got_hit_player, mage_walking_allArray);
 
 
 
@@ -261,8 +207,6 @@ void sub_boss(){
             {   
                 for(int i = 0; i < 4; i++){
                     counter[i]++;
-                    //uart_dec(counter[i]);
-                    //uart_sendc('\n');
                     if(counter[i] == knight_timer[i] && move_signal[i] == 2){ // attack phase
                         if(player1.x != player_prior_x[i] || player1.y != player_prior_y[i]){
                             move_signal[i] = 0;
@@ -271,8 +215,6 @@ void sub_boss(){
                     }else if(counter[i] == knight_timer[i]){        // moving phase
                         player_prior_x[i] = player1.x;
                         player_prior_y[i] = player1.y;
-                        //uart_dec(player_prior_x);
-                        //uart_sendc('\n');
                         move_signal[i] = 1;
                         counter[i] = 0;
                     }
@@ -282,6 +224,23 @@ void sub_boss(){
                 knight2 = control_knight(player1, knight2,&move_signal[1],player_prior_x[1],player_prior_y[1]);
                 knight3 = control_knight(player1, knight3,&move_signal[2],player_prior_x[2],player_prior_y[2]);
                 knight4 = control_knight(player1, knight4,&move_signal[3],player_prior_x[3],player_prior_y[3]);
+
+                for (int i = 0; i < player1.bomb_num; i++)
+                {
+                    player1.bomb[i].delay++;
+                    if (player1.bomb[i].delay > 20)
+                    { // delay 2 seconds
+                        player1.bomb[i].frame++;
+                        if (player1.bomb[i].frame > 11)
+                        {
+                            player1.bomb[i].frame = 0;
+                            player1.bomb[i].state = 0;
+                            player1.bomb[i].delay = 0;
+                            take_damaged_once = 1;
+                        }
+                    }
+                }
+
             }
 
             set_wait_timer(1, 10000); // reset 10ms timer
