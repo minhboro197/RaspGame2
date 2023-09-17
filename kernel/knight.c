@@ -5,7 +5,7 @@ int i = 0;
 int j = 0;
 int k = 0;
 int l = 0;
-human control_knight(human player1, human knight, int *move_signal, int player1_prior_x, int player1_prior_y){
+human control_knight(human player1, human knight, int *move_signal, int player1_prior_x, int player1_prior_y, int speed){
     //uart_dec(player1_prior_x- knight.x);
     //uart_sendc('\n');
     if(knight.is_alive == 0){
@@ -14,25 +14,25 @@ human control_knight(human player1, human knight, int *move_signal, int player1_
         return knight;
     }
     if(*move_signal == 1){
-        drawRectARGB32(knight.x +15, knight.y-5, knight.x + 30, knight.y + 50, 0x00000000, 1);
+        drawRectARGB32(knight.x , knight.y-10, knight.x + 40, knight.y + 50, 0x00000000, 1);
     }else{
-        drawRectARGB32(knight.x+5, knight.y, knight.x + 75, knight.y + 75, 0x00000000, 1);
+        drawRectARGB32(knight.x, knight.y-10, knight.x + 75, knight.y + 75, 0x00000000, 1);
     }
     if(*move_signal == 1){
         
         
         if(player1_prior_x < knight.x){
-            knight.x -= 5;
+            knight.x -= speed;
             drawGameAsset(i,knight.x,knight.y,knight_right_resolution[0],knight_right_resolution[1],knight_right_allArray);
         }else if(player1_prior_x > knight.x){
-            knight.x += 5;
+            knight.x += speed;
             drawGameAsset(i,knight.x,knight.y,knight_right_resolution[0],knight_right_resolution[1],knight_left_allArray);
         }
 
         if(player1_prior_y < knight.y){
-            knight.y -= 5;
+            knight.y -= speed;
         }else if(player1_prior_y > knight.y){
-            knight.y += 5;
+            knight.y += speed;
         }
 
         if((absolute(player1_prior_x - knight.x) < 40) && absolute(player1_prior_y- knight.y) < 50){

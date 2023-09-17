@@ -45,8 +45,12 @@ int tracking_player_on_map(human player, int map[][28], char c)
 }
 
 int npc_hit_detection(human humans[], unsigned int object_x, unsigned int object_y){
-    if(absolute(object_x - humans[0].x) < 28 && absolute(object_y - humans[0].y) < 29){
+    
+    for(int i =1; i < 4; i++){
+        if(absolute(object_x - humans[i].x) < 50 && absolute(object_y - humans[i].y) < 50){
+            uart_puts("got hit\n");
         return 1;
+        }
     }
     return 0;
 }
@@ -93,9 +97,9 @@ human plant_bomb(int map[][28],human characters[], human player1, char c, int *h
 {
     if (c == 'j')
     {
-        if (player1.bomb_num > 4)
+        if (player1.bomb_num > 20)
         {
-            player1.bomb_num = 4;
+            player1.bomb_num = 20;
         }
         else
         {

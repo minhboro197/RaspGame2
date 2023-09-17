@@ -48,7 +48,7 @@ typedef struct
     int move_index;
     unsigned int bomb_num;
     int got_hit;
-    Bombs bomb[5];
+    Bombs bomb[20];
 } human;
 
 int collision_detection(int map[][28],human humans[], unsigned int object_x, unsigned int object_y);

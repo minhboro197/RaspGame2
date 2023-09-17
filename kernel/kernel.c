@@ -166,13 +166,25 @@ void sub_boss(){
 
     set_wait_timer(1, 10000); // set 10ms
 
-    int knight_timer[] = {20,25,30,35};
+    int knight_timer[] = {10,25,40,45};
     int counter[] = {0,0,0,0};
     int move_signal[] = {0,0,0,0};
     int player_prior_x[] = {knight1.x,knight2.x,knight3.x, knight4.x};
     int player_prior_y[] = {knight1.y, knight2.y,knight3.y, knight4.y};
+    int prior_player_health = player1.health;
+    int game_status = 0;
+    draw_stats(5);
     while (1)
     {   
+        if(game_status == 1){
+            break;
+        }
+        
+        if(prior_player_health != player1.health){
+            drawRectARGB32(0,0,500,50,0x00000000,1);
+            draw_stats(player1.health);
+            prior_player_health = player1.health;
+        }
         // Draw map
         if (once == 0)
         {
@@ -188,7 +200,9 @@ void sub_boss(){
         *characters[0] = controlCharater(map4,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map4, c),&got_hit_player, mage_walking_allArray);
 
         character_take_damage(&characters,&got_hit_player,&take_damaged_once,4);
-
+        
+        
+        
         int timer = set_wait_timer(0, 0);
         if (timer)
         {
@@ -198,24 +212,27 @@ void sub_boss(){
                 //uart_sendc('\n');
                 for(int i = 0; i< 4; i++){
                     if(characters[i]->got_hit){
-                        uart_dec(i);
-                        uart_sendc('\n');
-                        move_signal[i-1] = 4;
+                        move_signal[i-1] = 4;   // move to huting phase
                         characters[i]->got_hit = 0;
-                        //uart_dec(absolute(characters[i]->health));
-                        //uart_sendc('\n');
                         if(characters[i]->health <= 0){
-                            //uart_puts("browhat\n");
-                            move_signal[i-1] = 3;
+                            move_signal[i-1] = 3;   // move to dying phase
                         }
                     }
 
                 }
                 
                 for(int i = 0; i < 4; i++){
-                    if(move_signal[i] != 3){
+                    if(move_signal[i] != 3){        // Take hit phase
                         counter[i]++;
                         if(counter[i] == knight_timer[i] && move_signal[i] == 2){ // attack phase
+                            if(npc_hit_detection(characters2, player1.x,player1.y)){
+                                *characters[0] = controlCharater(map4,characters2, *characters[0], 't', tracking_player_on_map(*characters[0], map4, 't'),&got_hit_player, mage_walking_allArray);
+                                player1.health -=1;
+                                if(player1.health < 0){
+                                    player1.is_alive =0;
+                                    game_status = 1;
+                                }
+                            }
                             if(player1.x != player_prior_x[i] || player1.y != player_prior_y[i]){
                                 move_signal[i] = 0;
                             }
@@ -230,10 +247,10 @@ void sub_boss(){
                     
                 }
             
-                knight1 = control_knight(player1, knight1,&move_signal[0],player_prior_x[0],player_prior_y[0]);
-                knight2 = control_knight(player1, knight2,&move_signal[1],player_prior_x[1],player_prior_y[1]);
-                //knight3 = control_knight(player1, knight3,&move_signal[2],player_prior_x[2],player_prior_y[2]);
-                //knight4 = control_knight(player1, knight4,&move_signal[3],player_prior_x[3],player_prior_y[3]);
+                knight1 = control_knight(player1, knight1,&move_signal[0],player_prior_x[0],player_prior_y[0],5);
+                knight2 = control_knight(player1, knight2,&move_signal[1],player_prior_x[1],player_prior_y[1],7);
+                knight3 = control_knight(player1, knight3,&move_signal[2],player_prior_x[2],player_prior_y[2],10);
+                knight4 = control_knight(player1, knight4,&move_signal[3],player_prior_x[3],player_prior_y[3],8);
 
                 for (int i = 0; i < player1.bomb_num; i++)
                 {
@@ -289,10 +306,10 @@ void main()
     uart_puts("\n\nHello World!\n");
     // Initialize frame buffer
     framebf_init();
-    draw_stats();
     // echo everything back
     
     //play_game();
     //final_boss();
     sub_boss();
+    uart_puts("GAME OVER\n");
 }
