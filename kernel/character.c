@@ -81,6 +81,7 @@ void drawGameAsset(int frame, unsigned int offset_x, unsigned int offset_y, unsi
     {
         for (int j = 0 + offset_y; j < height + offset_y; j++)
         {
+           
             drawPixelARGB32(i, j, frame_array[frame][index]);
             index++;
         }
@@ -123,15 +124,16 @@ human plant_bomb(int map[][28],human characters[], human player1, char c, int *h
                     {
                         int collision_type = collision_detection(map,characters, bomb_directions[k][0], bomb_directions[k][1]);
                         if (collision_type == -2 && collision_bomb[k] == -1)
-                        {
+                        {   
                             drawGameAsset(player1.bomb[i].frame - 4, bomb_directions[k][0], bomb_directions[k][1], explosion_width, explosion_height, bomb_explosion_allArray);
+                        }else if(collision_type >=0 && collision_bomb[k] == -1){
+                            drawGameAsset(player1.bomb[i].frame - 4, bomb_directions[k][0], bomb_directions[k][1], explosion_width, explosion_height, bomb_explosion_allArray);
+                            *hit_player = collision_type;
                         }
                         else
                         {
                             collision_bomb[k] = k;
-                            if(collision_type != -1 && collision_type != -2){
-                                *hit_player = collision_type;
-                            }
+                            
                         }
                     }
                 }

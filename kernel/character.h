@@ -32,7 +32,7 @@ typedef struct
     unsigned int frame_height;
     int is_npc;
     unsigned int frame_max;
-    volatile unsigned int health;
+    volatile int health;
     volatile unsigned int damage;
     volatile unsigned int range;
 

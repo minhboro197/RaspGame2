@@ -39,21 +39,8 @@ void npc1_plant_bomb(human npc1, human player)
     }
 }
 
-void print_map(int map[][28])
-{
-    for (int i = 0; i < 18; i++)
-    {
-        for (int j = 0; j < 28; j++)
-        {
-            uart_dec(map[i][j]);
-            uart_sendc(',');
-        }
-        uart_sendc('\n');
-    }
-}
-
-void character_take_damage(human *characters[], int *got_hit_player,int *take_damaged_once){
-        for(int i = 0; i <3; i++){
+void character_take_damage(human *characters[], int *got_hit_player,int *take_damaged_once,int size){
+        for(int i = 0; i <size; i++){
             if(*take_damaged_once){
                 if(*got_hit_player == i){
                     characters[i]->health -= 1;
@@ -63,12 +50,14 @@ void character_take_damage(human *characters[], int *got_hit_player,int *take_da
                 }
             }
         }
+
+        
         
 }
 
-    int once = 0;
-    int take_damaged_once = 1;
-    int got_hit_player = -1;
+int once = 0;
+int take_damaged_once = 1;
+int got_hit_player = -1;
 void play_game()
 {  
 
@@ -112,13 +101,13 @@ void play_game()
 
         *characters[0] = controlCharater(map2,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map2, c),&got_hit_player, mage_walking_allArray);
         
-        character_take_damage(&characters,&got_hit_player,&take_damaged_once);
+        character_take_damage(&characters,&got_hit_player,&take_damaged_once,3);
 
         int timer = set_wait_timer(0, 0);
         if (timer)
         {
-            if ((timer % 10) == 0)
-            { // every 100ms
+            if ((timer % 10) == 0)  // every 100ms
+            { 
                 //*characters[0] = controlCharater(characters2, *characters[0],'t', 0, &got_hit_player,mage_walking_allArray);
                 
                 for(int i = 0; i< 3; i++){
@@ -129,8 +118,8 @@ void play_game()
                             characters[i]->is_alive = 0;
                         }
                         //uart_dec(absolute(characters[i]->health));
-                        uart_dec(i);
-                        uart_sendc('\n');
+                        //uart_dec(i);
+                        //uart_sendc('\n');
                     }else{
                         if(i>0){    // exclude player
                             *characters[i] = move(map2,characters2, *characters[i], all_npc_moves[i-1], sizeof(npc1_moves) / sizeof(npc1_moves[0]), 0,&got_hit_player,mage_walking_allArray); 
@@ -191,39 +180,60 @@ void sub_boss(){
             draw_map_from_array(map4);
         }
 
-    human *characters[] = {&player1,&knight1,&knight2,&knight3,&knight4};   // Write only
-    human characters2[] = {*characters[0],*characters[1],*characters[2], *characters[3], *characters[4]};  // Read only
+        human *characters[] = {&player1,&knight1,&knight2,&knight3,&knight4};   // Write only
+        human characters2[] = {*characters[0],*characters[1],*characters[2], *characters[3], *characters[4]};  // Read only
 
-    char c = getUart();
+        char c = getUart();
 
-    *characters[0] = controlCharater(map4,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map4, c),&got_hit_player, mage_walking_allArray);
+        *characters[0] = controlCharater(map4,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map4, c),&got_hit_player, mage_walking_allArray);
 
-
+        character_take_damage(&characters,&got_hit_player,&take_damaged_once,4);
 
         int timer = set_wait_timer(0, 0);
         if (timer)
         {
             if ((timer % 10) == 0)
-            {   
-                for(int i = 0; i < 4; i++){
-                    counter[i]++;
-                    if(counter[i] == knight_timer[i] && move_signal[i] == 2){ // attack phase
-                        if(player1.x != player_prior_x[i] || player1.y != player_prior_y[i]){
-                            move_signal[i] = 0;
+            {    
+                //uart_dec(move_signal[0]);
+                //uart_sendc('\n');
+                for(int i = 0; i< 4; i++){
+                    if(characters[i]->got_hit){
+                        uart_dec(i);
+                        uart_sendc('\n');
+                        move_signal[i-1] = 4;
+                        characters[i]->got_hit = 0;
+                        //uart_dec(absolute(characters[i]->health));
+                        //uart_sendc('\n');
+                        if(characters[i]->health <= 0){
+                            //uart_puts("browhat\n");
+                            move_signal[i-1] = 3;
                         }
-                        counter[i] = 0;
-                    }else if(counter[i] == knight_timer[i]){        // moving phase
-                        player_prior_x[i] = player1.x;
-                        player_prior_y[i] = player1.y;
-                        move_signal[i] = 1;
-                        counter[i] = 0;
                     }
+
+                }
+                
+                for(int i = 0; i < 4; i++){
+                    if(move_signal[i] != 3){
+                        counter[i]++;
+                        if(counter[i] == knight_timer[i] && move_signal[i] == 2){ // attack phase
+                            if(player1.x != player_prior_x[i] || player1.y != player_prior_y[i]){
+                                move_signal[i] = 0;
+                            }
+                            counter[i] = 0;
+                        }else if(counter[i] == knight_timer[i]){        // moving phase
+                            player_prior_x[i] = player1.x;
+                            player_prior_y[i] = player1.y;
+                            move_signal[i] = 1;
+                            counter[i] = 0;
+                        }
+                    }
+                    
                 }
             
                 knight1 = control_knight(player1, knight1,&move_signal[0],player_prior_x[0],player_prior_y[0]);
                 knight2 = control_knight(player1, knight2,&move_signal[1],player_prior_x[1],player_prior_y[1]);
-                knight3 = control_knight(player1, knight3,&move_signal[2],player_prior_x[2],player_prior_y[2]);
-                knight4 = control_knight(player1, knight4,&move_signal[3],player_prior_x[3],player_prior_y[3]);
+                //knight3 = control_knight(player1, knight3,&move_signal[2],player_prior_x[2],player_prior_y[2]);
+                //knight4 = control_knight(player1, knight4,&move_signal[3],player_prior_x[3],player_prior_y[3]);
 
                 for (int i = 0; i < player1.bomb_num; i++)
                 {
