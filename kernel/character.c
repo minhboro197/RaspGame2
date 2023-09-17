@@ -3,8 +3,8 @@
 #include "bomb.h"
 #include "framebf.h"
 #include "bomb_explosion.h"
-#include "map_array.h"
 #include "../uart/uart1.h"
+#include "map_array.h"
 // Track player on the map and collison dection with walls
 int tracking_player_on_map(human player, int map[][28], char c)
 {
