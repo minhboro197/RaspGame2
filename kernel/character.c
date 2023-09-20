@@ -8,34 +8,39 @@
 // Track player on the map and collison dection with walls
 int tracking_player_on_map(human player, int map[][28], char c)
 {
-    int player_width = 25;
-    int player_height = 41;
-    int clearance = 5;
+    int player_width = player.frame_width;
+    int player_height = player.frame_height;
+    int clearance_y = 5;
+    int clearance_x = 5;
+    int bouding_box[][3] = {{player.y - clearance_y, player.x ,player.x + player_width + clearance_x-6,},
+                            {player.y + player_height + clearance_y, player.x, player.x + player_width+ clearance_x-6},
+                            {player.y, player.y + player_height + clearance_y-6, player.x},
+                            {player.y, player.y + player_height + clearance_y-6, player.x + player_width + clearance_x}}; 
 
     if (c == 'a')
-    {
-        if (map[(player.y + player_height) / 46][(player.x - (clearance+3)) / 38] > 0 || map[(player.y) / 46][(player.x - (clearance+3)) / 38] > 0)
+    {   
+        if(map[bouding_box[2][0] / 46][bouding_box[2][2] / 38] > 0 || map[bouding_box[2][1] / 46][(player.x - clearance_x) / 38] > 0)
         {
-            return 1;
+            return 1;   
         }
     }
     else if (c == 'd')
     {
-        if (map[(player.y + player_height) / 46][(player.x + player_width + (clearance+3)) / 38] > 0 || (map[(player.y) / 46][(player.x + player_width + (clearance+3)) / 38] > 0))
+        if (map[bouding_box[3][0] / 46][bouding_box[3][2] / 38] > 0 || (map[bouding_box[3][1] / 46][bouding_box[3][2] / 38] > 0))
         {
             return 1;
         }
     }
     else if (c == 'w')
     {
-        if (map[(player.y - clearance) / 46][(player.x + player_width + clearance) / 38] > 0 || map[(player.y - clearance) / 46][(player.x) / 38] > 0)
+        if (map[bouding_box[0][0]/ 46][bouding_box[0][1] / 38] > 0 || map[bouding_box[0][0] / 46][bouding_box[0][2] / 38] > 0)
         {
             return 1;
         }
     }
     else if (c == 's')
     {
-        if (map[(player.y + player_height + clearance) / 46][(player.x + player_width) / 38] > 0 || map[(player.y + player_height + clearance) / 46][(player.x) / 38] > 0)
+        if (map[bouding_box[1][0] / 46][bouding_box[1][1] / 38] > 0 || map[bouding_box[1][0] / 46][bouding_box[1][2] / 38] > 0)
         {
             return 1;
         }
@@ -185,8 +190,10 @@ unsigned int absolute(int num)
 int frame = 0;
 human controlCharater(int map[][28], human characters[], human player1, char c, int is_collision, int *hit_player, const unsigned long *frame_array[])
 {   
-    if(player1.is_alive == 0){
+    if(player1.is_npc){
         drawRectARGB32(player1.x, player1.y, player1.x + player1.frame_width, player1.y + player1.frame_height, 0x00000000, 1);
+    }
+    if(player1.is_alive == 0){
         player1.x =500;
         player1.y =0;
         return player1;
@@ -198,19 +205,21 @@ human controlCharater(int map[][28], human characters[], human player1, char c, 
         return player1;
     }
     
-    
         player1.prior_x = player1.x;
         player1.prior_y = player1.y;
     
 
     if (c == 'd' || c == 'a' || c == 'w' || c == 's')
-    {
+    {   
+        
         frame++;
         if (frame > player1.frame_max)
         {
             frame = 0;
         }
-        drawRectARGB32(player1.x, player1.y, player1.x + player1.frame_width, player1.y + player1.frame_height, 0x00000000, 1);
+        if(!player1.is_npc){
+            drawRectARGB32(player1.x, player1.y, player1.x + player1.frame_width, player1.y + player1.frame_height, 0x00000000, 1);
+        }
     }
     if (c == 'd')
     {
@@ -253,7 +262,7 @@ human move(int map[][28], human players[], human npc, moves moves[], unsigned in
      //npc = controlCharater(characters, npc, 'a', 0, tracking_player_on_map(npc, map2, 'a'));
                
                 
-    if(tracking_player_on_map(npc, map, moves[npc.move_index].direction) != 0){
+    if(tracking_player_on_map(npc, map, moves[npc.move_index].direction ) != 0){
         temp.move_index = temp.move_index+1;
     }
 

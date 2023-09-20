@@ -57,5 +57,5 @@ human character1_init(int x, int y, int moveup_offset, int is_npc,unsigned int f
 unsigned int absolute(int num);
 human controlCharater(int map[][28],human players[], human player1, char c, int is_collision,int *hit_player, const unsigned long *frame_array[]);
 human move(int map[][28],human players[], human npc, moves moves[], unsigned int move_size, int is_collision,int *hit_player, const unsigned long *frame_array[]);
-int tracking_player_on_map(human player, int map[][28], char c);
+int tracking_player_on_map(human player, int map[][28], char c );
 int npc_hit_detection(human humans[], unsigned int object_x, unsigned int object_y);

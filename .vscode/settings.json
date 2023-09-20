@@ -4,6 +4,7 @@
         "player.h": "c",
         "knight_actions.h": "c",
         "character.h": "c",
-        "uart1.h": "c"
+        "uart1.h": "c",
+        "goblin.h": "c"
     }
 }

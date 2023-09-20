@@ -6,6 +6,10 @@
 #include "boss/dragons.h"
 #include "./sub_boss/knight.h"      // character.h here
 #include "map_array.h"
+#include "./npcs/goblin.h"
+#include "./npcs/red_dude.h"
+#include "./npcs/goblem.h"
+#include "./npcs/death.h"
 // the compiler randomly ask for memcpy so i included it here
 void *memcpy(void *dest, const void *src, int count)
 {
@@ -78,9 +82,8 @@ void play_game()
     // wall block width and height is 38 and 46
     // span npc1 in the below formar
     human player1 = character1_init(38, 46 * 3, 9,0,8,mage_width,mage_height);
-    human npc1 = character1_init(38 * 10, 46 * 10, 9,1,8,mage_width,mage_height);
-    human npc2 = character1_init(38 * 5, 46 * 9, 9,1,8,mage_width,mage_height);
-
+    human npc1 = character1_init(38 * 10, 46 * 10, 3,1,2,red_dude_width,red_dude_height);
+    human npc2 = character1_init(38 * 5, 46 * 9, 3,1,2,goblem_width,goblem_height);
     // 1 seconds = 1000000
     set_wait_timer(1, 10000); // set 10ms
 
@@ -120,15 +123,11 @@ void play_game()
                         //uart_dec(absolute(characters[i]->health));
                         //uart_dec(i);
                         //uart_sendc('\n');
-                    }else{
-                        if(i>0){    // exclude player
-                            *characters[i] = move(map2,characters2, *characters[i], all_npc_moves[i-1], sizeof(npc1_moves) / sizeof(npc1_moves[0]), 0,&got_hit_player,mage_walking_allArray); 
-                        }
                     }
 
                 }
-                
-                //npc2 = move(characters2, npc2, npc2_moves, sizeof(npc2_moves) / sizeof(npc2_moves[0]), 0,&got_hit_player,mage_walking_allArray);
+                npc1 = move(map2, characters2, npc1, npc1_moves, sizeof(npc1_moves) / sizeof(npc1_moves[0]), 0,&got_hit_player,red_dude_allArray);
+                npc2 = move(map2, characters2, npc2, npc2_moves, sizeof(npc2_moves) / sizeof(npc2_moves[0]), 0,&got_hit_player,goblem_allArray);
                 
                 //int x = npc_hit_detection(characters2, npc1.x,npc1.y);
 
@@ -286,9 +285,16 @@ void final_boss(){
             if ((timer % 10) == 0)
             { 
                 
+                drawGameAsset(i,500 , 500 , 32,32, death_allArray);
+                i++;
+                /*
                 drawGameAsset(i,400,200,dragon_boss_width,dragon_boss_height,dargon_boss_allArray);
                 i++;
                 if(i > 7){
+                    i = 0;
+                }
+                */
+                if(i > death_allArray_LEN-1){
                     i = 0;
                 }
             }
@@ -297,6 +303,7 @@ void final_boss(){
         }
     }
 }
+
 
 void main()
 {
@@ -308,8 +315,9 @@ void main()
     framebf_init();
     // echo everything back
     
-    //play_game();
+    play_game();
     //final_boss();
-    sub_boss();
+    //sub_boss();
+    //goblin_test();
     uart_puts("GAME OVER\n");
 }
