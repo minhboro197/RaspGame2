@@ -62,7 +62,7 @@ void character_take_damage(human *characters[], int *got_hit_player,int *take_da
 int once = 0;
 int take_damaged_once = 1;
 int got_hit_player = -1;
-void play_game()
+void play_game(int map[][28])
 {  
 
     moves npc1_moves[] = {
@@ -94,7 +94,7 @@ void play_game()
         if (once == 0)
         {
             once = 1;
-            draw_map_from_array(map2);
+            draw_map_from_array(map);
         }
 
         human *characters[] = {&player1,&npc1,&npc2};   // Write only
@@ -102,7 +102,7 @@ void play_game()
         
         char c = getUart();
 
-        *characters[0] = controlCharater(map2,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map2, c),&got_hit_player, mage_walking_allArray);
+        *characters[0] = controlCharater(map,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map, c),&got_hit_player, mage_walking_allArray);
         
         character_take_damage(&characters,&got_hit_player,&take_damaged_once,3);
 
@@ -115,7 +115,7 @@ void play_game()
                 
                 for(int i = 0; i< 3; i++){
                     if(characters[i]->got_hit){
-                        *characters[i] = controlCharater(map2,characters2, *characters[i],'t', 0, &got_hit_player,mage_walking_allArray);
+                        *characters[i] = controlCharater(map,characters2, *characters[i],'t', 0, &got_hit_player,mage_walking_allArray);
                         characters[i]->got_hit = 0;
                         if(characters[i]->health == 0){
                             characters[i]->is_alive = 0;
@@ -126,8 +126,8 @@ void play_game()
                     }
 
                 }
-                npc1 = move(map2, characters2, npc1, npc1_moves, sizeof(npc1_moves) / sizeof(npc1_moves[0]), 0,&got_hit_player,red_dude_allArray);
-                npc2 = move(map2, characters2, npc2, npc2_moves, sizeof(npc2_moves) / sizeof(npc2_moves[0]), 0,&got_hit_player,goblem_allArray);
+                npc1 = move(map, characters2, npc1, npc1_moves, sizeof(npc1_moves) / sizeof(npc1_moves[0]), 0,&got_hit_player,red_dude_allArray);
+                npc2 = move(map, characters2, npc2, npc2_moves, sizeof(npc2_moves) / sizeof(npc2_moves[0]), 0,&got_hit_player,goblem_allArray);
                 
                 //int x = npc_hit_detection(characters2, npc1.x,npc1.y);
 
@@ -315,7 +315,8 @@ void main()
     framebf_init();
     // echo everything back
     
-    play_game();
+    //play_game(map2);
+    play_game(map3);
     //final_boss();
     //sub_boss();
     //goblin_test();
