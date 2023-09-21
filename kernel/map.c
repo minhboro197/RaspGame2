@@ -4,6 +4,7 @@
 #include "../uart/uart1.h"
 #include "stat.h"
 
+
 void draw_map_from_array(int map[][28])
 {
     for (int i = 0; i < 17; i++)
@@ -37,3 +38,4 @@ void print_map(int map[][28]){
             uart_sendc('\n');
         }
 }
+

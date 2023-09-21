@@ -5,6 +5,26 @@
 #include "bomb_explosion.h"
 #include "../uart/uart1.h"
 
+void character_take_damage(human *characters[], int *got_hit_player,int *take_damaged_once,int size){
+        for(int i = 0; i <size; i++){
+            //uart_dec(*take_damaged_once);
+            //uart_sendc('\n');
+            if(*take_damaged_once == 1){
+                if(*got_hit_player == i){
+                    if(i == 0){
+                        characters[i]->offset = 36;
+                    }
+                    characters[i]->health -= 1;
+                    characters[i]->got_hit = 1;
+                    *got_hit_player = -1;
+                    *take_damaged_once = 0;
+                }
+            }
+        }
+
+}
+
+
 // Track player on the map and collison dection with walls
 int tracking_player_on_map(human player, int map[][28], char c)
 {
@@ -14,14 +34,14 @@ int tracking_player_on_map(human player, int map[][28], char c)
     int clearance_x = 5;
     int bouding_box[][3] = {{player.y - clearance_y, player.x ,player.x + player_width + clearance_x-6,},
                             {player.y + player_height + clearance_y, player.x, player.x + player_width+ clearance_x-6},
-                            {player.y, player.y + player_height + clearance_y-6, player.x},
+                            {player.y, player.y + player_height + clearance_y-6, player.x - clearance_x},
                             {player.y, player.y + player_height + clearance_y-6, player.x + player_width + clearance_x}}; 
 
     if (c == 'a')
     {   
         if(map[bouding_box[2][0] / 46][bouding_box[2][2] / 38] > 0 || map[bouding_box[2][1] / 46][(player.x - clearance_x) / 38] > 0)
         {
-            return 1;   
+            return 1;
         }
     }
     else if (c == 'd')
@@ -51,8 +71,8 @@ int tracking_player_on_map(human player, int map[][28], char c)
 
 int npc_hit_detection(human humans[], unsigned int object_x, unsigned int object_y){
     
-    for(int i =1; i < 4; i++){
-        if(absolute(object_x - humans[i].x) < 50 && absolute(object_y - humans[i].y) < 50){
+    for(int i =1; i < 10; i++){
+        if(absolute(object_x - humans[i].x) < 30 && absolute(object_y - humans[i].y) < 30){
             uart_puts("got hit\n");
         return 1;
         }
@@ -61,11 +81,8 @@ int npc_hit_detection(human humans[], unsigned int object_x, unsigned int object
 }
 
 int collision_detection(int map[][28],human humans[], unsigned int object_x, unsigned int object_y){
-
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 10; i++){
         if(absolute(object_x - humans[i].x) < 28 && absolute(object_y - humans[i].y) < 29){
-            //uart_dec(absolute(object_y - humans[i].y));
-            //humans[i].health -= 5;
             return i;
         }
     }
@@ -97,14 +114,14 @@ void drawGameAsset(int frame, unsigned int offset_x, unsigned int offset_y, unsi
     }
 }
 
-int ignore_collision_after_explosion = 0;
+
 human plant_bomb(int map[][28],human characters[], human player1, char c, int *hit_player)
 {
     if (c == 'j')
     {
-        if (player1.bomb_num > 20)
+        if (player1.bomb_num > 200)
         {
-            player1.bomb_num = 20;
+            player1.bomb_num = 200;
         }
         else
         {
@@ -155,6 +172,7 @@ human plant_bomb(int map[][28],human characters[], human player1, char c, int *h
 human character1_init(int x, int y, int moveup_offset, int is_npc,unsigned int frame_max, unsigned int frame_width, unsigned int frame_height)
 {
     human character1;
+    character1.mode = 0;
     character1.frame = 0;
     character1.is_alive = 1;
     character1.frame_width = frame_width;
@@ -172,7 +190,7 @@ human character1_init(int x, int y, int moveup_offset, int is_npc,unsigned int f
     character1.offset = 8;
     character1.move_index = 0;
     character1.bomb_num = 0;
-    character1.health = 4;
+    character1.health = 5;
     character1.damage = 5;
     character1.range = 2;
     return character1;
@@ -188,7 +206,7 @@ unsigned int absolute(int num)
     return num;
 }
 
-int frame = 0;
+
 human controlCharater(int map[][28], human characters[], human player1, char c, int is_collision, int *hit_player, const unsigned long *frame_array[])
 {   
     if(player1.is_npc){
@@ -201,18 +219,16 @@ human controlCharater(int map[][28], human characters[], human player1, char c, 
     }
     if (is_collision)
     {
-        player1.x = player1.prior_x;
-        player1.y = player1.prior_y;
+        
         return player1;
     }
     
-        player1.prior_x = player1.x;
-        player1.prior_y = player1.y;
     
 
     if (c == 'd' || c == 'a' || c == 'w' || c == 's')
     {   
-        
+
+
         player1.frame++;
         if (player1.frame > player1.frame_max)
         {
@@ -221,6 +237,8 @@ human controlCharater(int map[][28], human characters[], human player1, char c, 
         if(!player1.is_npc){
             drawRectARGB32(player1.x, player1.y, player1.x + player1.frame_width, player1.y + player1.frame_height, 0x00000000, 1);
         }
+        player1.prior_x = player1.x;
+        player1.prior_y = player1.y;
     }
     if (c == 'd')
     {
@@ -246,6 +264,7 @@ human controlCharater(int map[][28], human characters[], human player1, char c, 
     {
         player1 = plant_bomb(map,characters, player1, c, hit_player);
     }else if (c == 't'){
+        
        player1.offset = 36;
     }
 
@@ -261,26 +280,30 @@ human move(int map[][28], human players[], human npc, moves moves[], unsigned in
     human temp = controlCharater(map,players, npc, moves[npc.move_index].direction, tracking_player_on_map(npc, map, moves[npc.move_index].direction), hit_player, frame_array);
     
      //npc = controlCharater(characters, npc, 'a', 0, tracking_player_on_map(npc, map2, 'a'));
-        uart_dec(temp.move_index);
+        //uart_dec(temp.move_index);
         //uart_sendc(',');
         //uart_dec(npc.y/46);
-        uart_sendc('\n');
+        //uart_sendc('\n');
+        if(players[0].prior_x != players[0].x  || players[0].prior_y != players[0].y){
+            temp.move_index = 0;
+            temp.mode = 1;
+        }
     if(moves[temp.move_index].direction == 'w'){
         if(npc.x/38 == moves[temp.move_index].distance[0] && (npc.y+36)/46 == moves[temp.move_index].distance[1]){
-            
+            //temp.mode = 1;
             temp.move_index = temp.move_index+1;
         }
     }else if(moves[temp.move_index].direction == 'a'){
         if((npc.x+28)/38 == moves[temp.move_index].distance[0] && npc.y/46 == moves[temp.move_index].distance[1]){
-            
-
+            //temp.mode = 1;
             temp.move_index = temp.move_index+1;
         }
     }
     else{
         if((npc.x+5)/38 == moves[temp.move_index].distance[0] && npc.y/46 == moves[temp.move_index].distance[1]){
-        //if(tracking_player_on_map(npc, map, moves[npc.move_index].direction ) != 0){
-        temp.move_index = temp.move_index+1;
+            //temp.mode = 1;
+            //if(tracking_player_on_map(npc, map, moves[npc.move_index].direction ) != 0){
+            temp.move_index = temp.move_index+1;
         }
     }
 

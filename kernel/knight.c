@@ -36,7 +36,7 @@ human control_knight(human player1, human knight, int *move_signal, int player1_
             knight.y += speed;
         }
 
-        if((absolute(player1_prior_x - knight.x) < 40) && absolute(player1_prior_y- knight.y) < 50){
+        if((absolute(player1_prior_x - knight.x) < 30) && absolute(player1_prior_y- knight.y) < 30){
             *move_signal = 2;
         }
 

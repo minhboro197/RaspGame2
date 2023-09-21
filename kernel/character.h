@@ -27,6 +27,7 @@ typedef struct
 
 typedef struct
 {   
+    int mode;
     int frame;
     volatile int is_alive;
     unsigned int frame_width;
@@ -49,8 +50,9 @@ typedef struct
     int move_index;
     unsigned int bomb_num;
     int got_hit;
-    Bombs bomb[20];
+    Bombs bomb[200];
 } human;
+void character_take_damage(human *characters[], int *got_hit_player,int *take_damaged_once,int size);
 
 int collision_detection(int map[][28],human humans[], unsigned int object_x, unsigned int object_y);
 void drawGameAsset(int frame, unsigned int offset_x, unsigned int offset_y, unsigned int width, unsigned int height, const unsigned long *frame_array[]);
