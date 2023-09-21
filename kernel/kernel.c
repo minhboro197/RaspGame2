@@ -10,6 +10,7 @@
 #include "./npcs/red_dude.h"
 #include "./npcs/goblem.h"
 #include "./npcs/death.h"
+
 // the compiler randomly ask for memcpy so i included it here
 void *memcpy(void *dest, const void *src, int count)
 {
@@ -35,13 +36,6 @@ void *memset(void *dest, int value, int count)
     return dest;
 }
 
-void npc1_plant_bomb(human npc1, human player)
-{
-    if (absolute(npc1.x - player.x) < 50 && absolute(npc1.y - player.y) < 50)
-    {
-        uart_puts("detected by enemy");
-    }
-}
 
 void character_take_damage(human *characters[], int *got_hit_player,int *take_damaged_once,int size){
         for(int i = 0; i <size; i++){
@@ -59,12 +53,143 @@ void character_take_damage(human *characters[], int *got_hit_player,int *take_da
         
 }
 
+
+void reset_flood_map(int map[][28]){
+        // Copy map
+    for(int i = 0; i < 17; i++){
+        for(int j = 0; j < 28; j++){
+            if(map[i][j] > 0){
+                flood_map[i][j] = -1;
+            }
+            else{
+                flood_map[i][j] = -2;
+            }
+        }
+    }
+
+    // Initialize distances to infinity
+    for (int i = 0; i < 17; i++) {
+        for (int j = 0; j < 28; j++) {
+            distances[i][j] = 2147483647;
+        }
+    }
+}
+
+
+int dx[] = {-1, 1, 0, 0};
+int dy[] = {0, 0, -1, 1};
+
+void dijkstra_find_route(int map[][28], int x, int y, int x_end, int y_end, int distance[][28]){
+    if(x == x_end && y == y_end){
+        uart_puts("bro1\n");
+        return;
+    }
+
+    for(int i =0; i < 4; i++){
+        int next_move[] = {x + dx[i], y + dy[i]};
+
+        if(next_move[0] < 17 && next_move[1] < 28 && map[next_move[0]][next_move[1]] != -1){
+            int newDistant = distance[x][y] +1;
+
+            if(newDistant < distance[next_move[0]][next_move[1]]){
+                //uart_dec(next_move[0]);
+                //uart_sendc(',');
+                //uart_dec(next_move[1]);
+                //uart_sendc('\n');
+                distance[next_move[0]][next_move[1]] = newDistant;
+                dijkstra_find_route(map,next_move[0], next_move[1],x_end,y_end, distance);
+            }
+        }
+    }
+}
+
+void dijkstra_plan_route(int map[][28], int x, int y,int x_end, int y_end, int distance[][28], moves *npc_chase){
+    int current_x = x_end;
+    int current_y = y_end;
+
+    while(current_x != x || current_y != y){
+        if((current_x == x -1 && current_y == y) || (current_x == x + 1 && current_y == y) || (current_x == x && current_y == y-1) ||(current_x == x && current_y == y+1) ){
+            break;
+        }
+        
+        for(int i = 0; i < 4; i++){
+            int next_move[] = {current_x + dx[i], current_y + dy[i]};
+            //uart_dec(next_move[0]);
+            //uart_sendc(',');
+            //uart_dec(next_move[1]);
+            //uart_sendc('\n');
+            if(next_move[0] < 17 && next_move[1] < 28 && distance[next_move[0]][next_move[1]] == distance[current_x][current_y] -1){
+                
+                current_x = next_move[0];
+                current_y = next_move[1];
+                map[current_x][current_y] = 8;
+                //uart_puts("bro2\n");
+                break;
+            }
+        }
+    }
+    
+    print_map(flood_map);
+    int index = 0;
+    
+    current_x = x;
+    current_y = y;
+    while(1){
+        int min_index = 0;
+        //uart_dec(x);
+        //uart_sendc(',');
+        //uart_dec(y);
+        //uart_sendc('\n');
+        //uart_puts("broas\n");
+
+            //uart_dec(current_x);
+            //uart_sendc(',');
+            //uart_dec(current_y);
+            //uart_sendc('\n');
+        if((current_x == x_end -1 && current_y == y_end) || (current_x == x_end + 1 && current_y == y_end) || (current_x == x_end && current_y == y_end-1) ||(current_x == x_end && current_y == y_end+1) ){
+            break;
+        }
+        for(int i = 0; i< 4; i++){
+            int next_move[] = {current_x + dx[i], current_y + dy[i]};
+            if(map[next_move[0]][next_move[1]] == 8){
+                map[next_move[0]][next_move[1]] = 0; // mark as travelled
+                min_index = i;
+            }
+
+        }
+        if(min_index == 0){
+            current_x -= 1;
+            npc_chase[index].direction = 'w';
+        }else if(min_index == 1){
+            current_x += 1;
+            npc_chase[index].direction = 's';
+        }else if(min_index == 2){
+            current_y -= 1;
+            npc_chase[index].direction = 'a';
+        }else if(min_index == 3){
+            current_y += 1;
+            npc_chase[index].direction = 'd';
+        }
+        npc_chase[index].distance[0] = current_y;
+        npc_chase[index].distance[1] = current_x;
+        
+        index++;
+    }
+}
+
+
+
+
 int once = 0;
 int take_damaged_once = 1;
 int got_hit_player = -1;
 void play_game(int map[][28])
 {  
+    moves death_npc_chase[100];
+    moves red_dude_npc_chase[100];
+    moves goblem_npc_chase[100];
 
+    /*
     moves npc1_moves[] = {
         {'d', 85},
         {'a', 100},
@@ -76,29 +201,44 @@ void play_game(int map[][28])
         {'d', 80},
         {'s', 100},
         {'a', 100}};
-
+    
     moves* all_npc_moves[] = {npc1_moves, npc2_moves};
+    */
 
     // wall block width and height is 38 and 46
     // span npc1 in the below formar
-    human player1 = character1_init(38, 46 * 3, 9,0,8,mage_width,mage_height);
-    human npc1 = character1_init(38 * 10, 46 * 10, 3,1,2,red_dude_width,red_dude_height);
-    human npc2 = character1_init(38 * 5, 46 * 9, 3,1,2,goblem_width,goblem_height);
+    human player1 = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height);
+    human npc1 = character1_init(block_width * 1, block_height * 11, 3,0,2,death_width,death_height);
+    human npc2 = character1_init(38 * 5, 46 * 9, 3,0,2,goblem_width,goblem_height);
+    human npc3 = character1_init(38 * 15, 46 * 3, 3,0,2,red_dude_width,red_dude_height);
+
     // 1 seconds = 1000000
     set_wait_timer(1, 10000); // set 10ms
-
     while (1)
     {   
         
-        // Draw map
         if (once == 0)
-        {
+        {   
+            reset_flood_map(map);
+            dijkstra_find_route(flood_map, npc1.y/block_height,npc1.x/block_width,player1.y/block_height,player1.x/block_width,distances);
+            dijkstra_plan_route(flood_map,npc1.y/block_height,npc1.x/block_width,player1.y/block_height,player1.x/block_width,distances,death_npc_chase);
+            
+            reset_flood_map(map);
+            dijkstra_find_route(flood_map, npc2.y/block_height,npc2.x/block_width,player1.y/block_height,player1.x/block_width,distances);
+            dijkstra_plan_route(flood_map,npc2.y/block_height,npc2.x/block_width,player1.y/block_height,player1.x/block_width,distances,goblem_npc_chase);
+            
+            reset_flood_map(map);
+            dijkstra_find_route(flood_map, npc3.y/block_height,npc3.x/block_width,player1.y/block_height,player1.x/block_width,distances);
+            dijkstra_plan_route(flood_map,npc3.y/block_height,npc3.x/block_width,player1.y/block_height,player1.x/block_width,distances,red_dude_npc_chase);
+            
+            // //plan_routes(npc1, &npc_chase);
+            //print_map(flood_map);
             once = 1;
             draw_map_from_array(map);
         }
 
-        human *characters[] = {&player1,&npc1,&npc2};   // Write only
-        human characters2[] = {*characters[0],*characters[1],*characters[2]};  // Read only
+        human *characters[] = {&player1,&npc1, &npc2, &npc3};   // Write only
+        human characters2[] = {*characters[0],*characters[1], *characters[2], *characters[3]};  // Read only
         
         char c = getUart();
 
@@ -111,24 +251,20 @@ void play_game(int map[][28])
         {
             if ((timer % 10) == 0)  // every 100ms
             { 
-                //*characters[0] = controlCharater(characters2, *characters[0],'t', 0, &got_hit_player,mage_walking_allArray);
-                
-                for(int i = 0; i< 3; i++){
+                for(int i = 0; i< 2; i++){
                     if(characters[i]->got_hit){
                         *characters[i] = controlCharater(map,characters2, *characters[i],'t', 0, &got_hit_player,mage_walking_allArray);
                         characters[i]->got_hit = 0;
                         if(characters[i]->health == 0){
                             characters[i]->is_alive = 0;
                         }
-                        //uart_dec(absolute(characters[i]->health));
-                        //uart_dec(i);
-                        //uart_sendc('\n');
+
                     }
 
                 }
-                npc1 = move(map, characters2, npc1, npc1_moves, sizeof(npc1_moves) / sizeof(npc1_moves[0]), 0,&got_hit_player,red_dude_allArray);
-                npc2 = move(map, characters2, npc2, npc2_moves, sizeof(npc2_moves) / sizeof(npc2_moves[0]), 0,&got_hit_player,goblem_allArray);
-                
+                npc1 = move(map, characters2, npc1, death_npc_chase, 100, 0,&got_hit_player,death_allArray);
+                npc2 = move(map, characters2, npc2, goblem_npc_chase, 100, 0,&got_hit_player,goblem_allArray);
+                npc3 = move(map, characters2, npc3, red_dude_npc_chase, 100, 0,&got_hit_player,red_dude_allArray);
                 //int x = npc_hit_detection(characters2, npc1.x,npc1.y);
 
 
@@ -305,6 +441,7 @@ void final_boss(){
 }
 
 
+
 void main()
 {
     // set up serial console
@@ -315,10 +452,20 @@ void main()
     framebf_init();
     // echo everything back
     
+    human player1 = character1_init(38, 46 * 3, 9,0,8,mage_width,mage_height);
+    human npc1 = character1_init(38*1, 46 * 11, 9,0,8,mage_width,mage_height);
+
+    //dijkstra_find_route(flood_map, 11,1,3,1,distances);
+    //dijkstra_plan_route(flood_map,11,1,3,1,distances,npc_chase);
+    
+    //flood_fill(flood_map, 11, 3,0);
+    //plan_routes(npc1, &npc_chase);
+    //print_map(flood_map);
+    uart_puts("hellosasd\n");
     //play_game(map2);
     play_game(map3);
     //final_boss();
     //sub_boss();
     //goblin_test();
-    uart_puts("GAME OVER\n");
+
 }

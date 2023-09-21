@@ -22,11 +22,12 @@ typedef struct
 typedef struct
 {
     char direction;
-    int distance;
+    int distance[2];
 } moves;
 
 typedef struct
 {   
+    int frame;
     volatile int is_alive;
     unsigned int frame_width;
     unsigned int frame_height;

@@ -4,3 +4,4 @@
 #define block_height 46
 void draw_map_from_array(int map[][28]);
 void draw_stats(int heart_count);
+void print_map(int map[][28]);

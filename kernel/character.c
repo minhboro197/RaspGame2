@@ -155,6 +155,7 @@ human plant_bomb(int map[][28],human characters[], human player1, char c, int *h
 human character1_init(int x, int y, int moveup_offset, int is_npc,unsigned int frame_max, unsigned int frame_width, unsigned int frame_height)
 {
     human character1;
+    character1.frame = 0;
     character1.is_alive = 1;
     character1.frame_width = frame_width;
     character1.frame_height = frame_height;
@@ -212,10 +213,10 @@ human controlCharater(int map[][28], human characters[], human player1, char c, 
     if (c == 'd' || c == 'a' || c == 'w' || c == 's')
     {   
         
-        frame++;
-        if (frame > player1.frame_max)
+        player1.frame++;
+        if (player1.frame > player1.frame_max)
         {
-            frame = 0;
+            player1.frame = 0;
         }
         if(!player1.is_npc){
             drawRectARGB32(player1.x, player1.y, player1.x + player1.frame_width, player1.y + player1.frame_height, 0x00000000, 1);
@@ -223,22 +224,22 @@ human controlCharater(int map[][28], human characters[], human player1, char c, 
     }
     if (c == 'd')
     {
-        player1.offset = player1.moveright_frame_offset + frame;
+        player1.offset = player1.moveright_frame_offset + player1.frame;
         player1.x += 5;
     }
     else if (c == 'a')
     {
-        player1.offset = player1.moveleft_frame_offset + frame;
+        player1.offset = player1.moveleft_frame_offset + player1.frame;
         player1.x -= 5;
     }
     else if (c == 'w')
     {
-        player1.offset = player1.moveup_frame_offset + frame;
+        player1.offset = player1.moveup_frame_offset + player1.frame;
         player1.y -= 5;
     }
     else if (c == 's')
     {
-        player1.offset = player1.movedown_frame_offset + frame;
+        player1.offset = player1.movedown_frame_offset + player1.frame;
         player1.y += 5;
     }
     else if (c == 'j' || player1.bomb_num)
@@ -260,10 +261,27 @@ human move(int map[][28], human players[], human npc, moves moves[], unsigned in
     human temp = controlCharater(map,players, npc, moves[npc.move_index].direction, tracking_player_on_map(npc, map, moves[npc.move_index].direction), hit_player, frame_array);
     
      //npc = controlCharater(characters, npc, 'a', 0, tracking_player_on_map(npc, map2, 'a'));
-               
-                
-    if(tracking_player_on_map(npc, map, moves[npc.move_index].direction ) != 0){
+        uart_dec(temp.move_index);
+        //uart_sendc(',');
+        //uart_dec(npc.y/46);
+        uart_sendc('\n');
+    if(moves[temp.move_index].direction == 'w'){
+        if(npc.x/38 == moves[temp.move_index].distance[0] && (npc.y+36)/46 == moves[temp.move_index].distance[1]){
+            
+            temp.move_index = temp.move_index+1;
+        }
+    }else if(moves[temp.move_index].direction == 'a'){
+        if((npc.x+28)/38 == moves[temp.move_index].distance[0] && npc.y/46 == moves[temp.move_index].distance[1]){
+            
+
+            temp.move_index = temp.move_index+1;
+        }
+    }
+    else{
+        if((npc.x+5)/38 == moves[temp.move_index].distance[0] && npc.y/46 == moves[temp.move_index].distance[1]){
+        //if(tracking_player_on_map(npc, map, moves[npc.move_index].direction ) != 0){
         temp.move_index = temp.move_index+1;
+        }
     }
 
     if (temp.move_index > move_size - 1)

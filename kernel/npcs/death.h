@@ -425,16 +425,16 @@ const int death_height = 32;
 // Array of all bitmaps for convenience. (Total bytes used to store images in  = 6336)
 const int death_allArray_LEN = 12;
 const unsigned long* death_allArray[12] = {
-	death_batch_one_0__1_,
-	death_death_down2,
-	death_death_down3,
+	death_death_up0,
+	death_death_up1,
+	death_death_up2,
 	death_death_left,
 	death_death_left1,
 	death_death_left2,
+	death_batch_one_0__1_,
+	death_death_down2,
+	death_death_down3,
 	death_death_right0,
 	death_death_right1,
-	death_death_right2,
-	death_death_up0,
-	death_death_up1,
-	death_death_up2
+	death_death_right2
 };

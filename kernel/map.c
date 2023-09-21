@@ -26,3 +26,14 @@ void draw_stats(int heart_count) {
         drawGameAsset(0, x_position, 0, heart_width, 30, heart_iconallArray);
     }
 }
+
+void print_map(int map[][28]){
+    for(int i = 0; i < 17; i++){
+            for(int j = 0; j < 28; j++){
+                uart_dec(map[i][j]);
+                uart_puts(",  ");
+                
+            }
+            uart_sendc('\n');
+        }
+}
