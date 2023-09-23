@@ -72,7 +72,7 @@ int tracking_player_on_map(human player, int map[][28], char c)
 int npc_hit_detection(human humans[], unsigned int object_x, unsigned int object_y){
     
     for(int i =1; i < 10; i++){
-        if(absolute(object_x - humans[i].x) < 30 && absolute(object_y - humans[i].y) < 30){
+        if(absolute(object_x - humans[i].x) < 42 && absolute(object_y - humans[i].y) < 49){
             uart_puts("got hit\n");
         return 1;
         }
@@ -225,7 +225,7 @@ human controlCharater(int map[][28], human characters[], human player1, char c, 
     
     
 
-    if (c == 'd' || c == 'a' || c == 'w' || c == 's')
+    if (c == 'd' || c == 'a' || c == 'w' || c == 's' || c == 'p')
     {   
 
 
@@ -266,6 +266,8 @@ human controlCharater(int map[][28], human characters[], human player1, char c, 
     }else if (c == 't'){
         
        player1.offset = 36;
+    }else if (c == 'p'){
+        player1.offset = 36 + player1.frame;
     }
 
     drawGameAsset(player1.offset, player1.x, player1.y, player1.frame_width, player1.frame_height, frame_array);
@@ -279,30 +281,18 @@ human move(int map[][28], human players[], human npc, moves moves[], unsigned in
     //human temp = controlCharater(players, npc, moves[npc.move_index].direction, is_collision, hit_player, frame_array);
     human temp = controlCharater(map,players, npc, moves[npc.move_index].direction, tracking_player_on_map(npc, map, moves[npc.move_index].direction), hit_player, frame_array);
     
-     //npc = controlCharater(characters, npc, 'a', 0, tracking_player_on_map(npc, map2, 'a'));
-        //uart_dec(temp.move_index);
-        //uart_sendc(',');
-        //uart_dec(npc.y/46);
-        //uart_sendc('\n');
-        if(players[0].prior_x != players[0].x  || players[0].prior_y != players[0].y){
-            temp.move_index = 0;
-            temp.mode = 1;
-        }
+
     if(moves[temp.move_index].direction == 'w'){
         if(npc.x/38 == moves[temp.move_index].distance[0] && (npc.y+36)/46 == moves[temp.move_index].distance[1]){
-            //temp.mode = 1;
             temp.move_index = temp.move_index+1;
         }
     }else if(moves[temp.move_index].direction == 'a'){
         if((npc.x+28)/38 == moves[temp.move_index].distance[0] && npc.y/46 == moves[temp.move_index].distance[1]){
-            //temp.mode = 1;
             temp.move_index = temp.move_index+1;
         }
     }
     else{
         if((npc.x+5)/38 == moves[temp.move_index].distance[0] && npc.y/46 == moves[temp.move_index].distance[1]){
-            //temp.mode = 1;
-            //if(tracking_player_on_map(npc, map, moves[npc.move_index].direction ) != 0){
             temp.move_index = temp.move_index+1;
         }
     }

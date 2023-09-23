@@ -181,7 +181,8 @@ void play_game(int map[][28])
     moves red_dude_npc_chase[100];
     moves goblem_npc_chase[100];
 
-    
+    moves *npc_chases[] = {&death_npc_chase, &goblem_npc_chase, &red_dude_npc_chase};
+
     moves npc1_moves[] = {
         {'d', {5,11}},
         {'a', {1,11}}};
@@ -196,7 +197,7 @@ void play_game(int map[][28])
     
 
     // wall block width and height is 38 and 46
-    // span npc1 in the below formar
+    // span characters in the below format
     human player1 = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height);
 
     human npc1 = character1_init(block_width * 1, block_height * 11, 3,0,2,death_width,death_height);
@@ -208,9 +209,10 @@ void play_game(int map[][28])
 
     int prior_player_health = player1.health;
     int game_status = 0;
-    npc1.mode = 1;
-    npc2.mode = 1;
-    npc3.mode = 1;
+
+    int player_prior_x[] = {0,0,0};
+    int player_prior_y[] = {0, 0,0};
+    int npc_timer[] = {150,200,250};
 
     // 1 seconds = 1000000
     set_wait_timer(1, 10000); // set 10ms
@@ -233,65 +235,47 @@ void play_game(int map[][28])
         *characters[0] = controlCharater(map,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map, c),&got_hit_player, mage_walking_allArray);
         
         character_take_damage(&characters,&got_hit_player,&take_damaged_once,4);
-        //uart_dec(got_hit_player);
-        //uart_sendc('\n');
+        
+
         int timer = set_wait_timer(0, 0);
         if (timer)
         {   
-
-            if(timer % 200 == 0){
-                    if(npc1.mode == 1 && npc1.is_alive){
-
-                    drawRectARGB32(npc1.x, npc1.y, npc1.x + death_width, npc1.y + death_height, 0x00000000, 1);
-                    npc1.x = (npc1.x/block_width) * block_width;
-                    npc1.y = (npc1.y/block_height) * block_height;
+            for(int i= 1; i < 4; i++){  // plan best route for all npcs
+                if(timer % npc_timer[i-1] == 0){
+                    if((player1.x != player_prior_x[i-1] || player1.y != player_prior_y[i-1] ) && characters[i]->is_alive){
+                    player_prior_x[i-1] = player1.x;
+                    player_prior_y[i-1] = player1.y;
+                    drawRectARGB32(characters[i]->x, characters[i]->y, characters[i]->x + characters[i]->frame_width, characters[i]->y + characters[i]->frame_height, 0x00000000, 1);
+                    characters[i]->x = (characters[i]->x/block_width) * block_width;
+                    characters[i]->y = (characters[i]->y/block_height) * block_height;
                     reset_flood_map(map);
-                    dijkstra_find_route(flood_map, npc1.y/block_height,npc1.x/block_width,player1.y/block_height,player1.x/block_width,distances);
-                    dijkstra_plan_route(flood_map,npc1.y/block_height,npc1.x/block_width,player1.y/block_height,player1.x/block_width,distances,death_npc_chase);
-                    npc1.mode = 0;
+                    dijkstra_find_route(flood_map, characters[i]->y/block_height,characters[i]->x/block_width,player1.y/block_height,player1.x/block_width,distances);
+                    dijkstra_plan_route(flood_map,characters[i]->y/block_height,characters[i]->x/block_width,player1.y/block_height,player1.x/block_width,distances,npc_chases[i-1]);
+                    characters[i]->move_index = 0;
+                    }
                 }
             }
 
-            if(timer % 150 == 0){
-                if(npc2.mode == 1 && npc2.is_alive){
-                    drawRectARGB32(npc2.x, npc2.y, npc2.x + goblem_width, npc2.y + goblem_height +3, 0x00000000, 1);
-                    npc2.x = (npc2.x/block_width) * block_width;
-                    npc2.y = (npc2.y/block_height) * block_height;
-                    reset_flood_map(map);
-                    dijkstra_find_route(flood_map, npc2.y/block_height,npc2.x/block_width,player1.y/block_height,player1.x/block_width,distances);
-                    dijkstra_plan_route(flood_map,npc2.y/block_height,npc2.x/block_width,player1.y/block_height,player1.x/block_width,distances,goblem_npc_chase);
-                    npc2.mode = 0;
-                }
-            }
 
-            if(timer % 250 == 0){
-                if(npc3.mode == 1 && npc3.is_alive){
-                    drawRectARGB32(npc3.x, npc3.y, npc3.x + red_dude_width, npc3.y + red_dude_height, 0x00000000, 1);
-                    npc3.x = (npc3.x/block_width) * block_width;
-                    npc3.y = (npc3.y/block_height) * block_height;
-                    reset_flood_map(map);
-                    dijkstra_find_route(flood_map, npc3.y/block_height,npc3.x/block_width,player1.y/block_height,player1.x/block_width,distances);
-                    dijkstra_plan_route(flood_map,npc3.y/block_height,npc3.x/block_width,player1.y/block_height,player1.x/block_width,distances,red_dude_npc_chase);
-                    npc3.mode = 0;
-                }
-            }
 
-            if((timer % 50) == 0){ // every seconds
-
+            // Player hit dection
+            if((timer % 50) == 0){ // every 500ms
                 if(npc_hit_detection(characters2, player1.x,player1.y)){
-                    //*characters[0] = controlCharater(map4,characters2, *characters[0], 't', tracking_player_on_map(*characters[0], map4, 't'),&got_hit_player, mage_walking_allArray);
                     player1.offset = 36;
                     player1.health -=1;
                     if(player1.health < 0){
+                        //player1.offset = 43;
+                        //controlCharater(map,characters2, *characters[0], 'p', tracking_player_on_map(*characters[0], map, 'p'),&got_hit_player, mage_walking_allArray);
                         player1.is_alive =0;
                         game_status = 1;
                     }
                 }
             }
-            if ((timer % 10) == 0)  // every 100ms
-            { 
-                
 
+
+
+            if ((timer % 10) == 0)  // animation update every 100ms
+            {   
                 for(int i = 0; i< 4; i++){
                     if(characters[i]->got_hit == 1){
                         //*characters[i] = controlCharater(map,characters2, *characters[i],'t', 0, &got_hit_player,mage_walking_allArray);
@@ -311,6 +295,8 @@ void play_game(int map[][28])
                 npc3 = move(map, characters2, npc3, red_dude_npc_chase, 100, 0,&got_hit_player,red_dude_allArray);
 
 
+
+                // For bomb animation
                 for (int i = 0; i < player1.bomb_num; i++)
                 {
                     player1.bomb[i].delay++;
