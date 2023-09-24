@@ -2,7 +2,7 @@
 #include "../uart/uart1.h"
 #include "framebf.h"
 #include "map.h"
-#include "magewalking.h"
+#include "./player/magewalking.h"
 #include "boss/dragons.h"
 #include "./sub_boss/knight.h"      // character.h here
 #include "map_array.h"
@@ -10,7 +10,7 @@
 #include "./npcs/red_dude.h"
 #include "./npcs/goblem.h"
 #include "./npcs/death.h"
-
+#include "./npcs/gladiatorwalking.h"
 // the compiler randomly ask for memcpy so i included it here
 void *memcpy(void *dest, const void *src, int count)
 {
@@ -166,15 +166,126 @@ void dijkstra_plan_route(int map[][28], int x, int y,int x_end, int y_end, int d
 }
 
 
-
-
 int once = 1;
 int take_damaged_once = 0;
 int got_hit_player = -1;
-void play_game(int map[][28])
+
+void play_game1(int map[][28]){
+    draw_map_from_array(map);
+
+    moves npc1_moves[] = {
+    {'w', {1,7}},
+    {'s', {1,11}}};
+
+    moves npc2_moves[] = {
+        {'d', {8,9}},
+        {'a', {5,9}}};
+    
+    moves *all_npc_moves[] = {&npc1_moves, &npc2_moves};
+    
+
+    // wall block width and height is 38 and 46
+    // span characters in the below format
+    human player1 = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height);
+
+    human npc1 = character1_init(block_width * 1, block_height * 11, 7,1,6,goblin_width,goblin_height);
+    human npc2 = character1_init(38 * 5, 46 * 9, 4,1,3,gladiator_width,gladiator_height);
+
+    human npc3 = character1_init(38 * 15, 46 * 3, 3,1,2,red_dude_width,red_dude_height);
+
+    
+    //print_map(flood_map);
+
+    int prior_player_health = player1.health;
+    int game_status = 0;
+
+    draw_stats(player1.health);
+
+    // 1 seconds = 1000000
+    set_wait_timer(1, 10000); // set 10ms
+    while (1)
+    {   
+        char c = getUart();
+
+        if(prior_player_health != player1.health){
+            drawRectARGB32(0,0,500,50,0x00000000,1);
+            draw_stats(player1.health);
+            prior_player_health = player1.health;
+        }
+        if(game_status == 1){
+            break;
+        }
+
+        human *characters[] = {&player1, &npc1, &npc2, &npc3};   // Write only
+        human characters2[] = {*characters[0],*characters[1], *characters[2], *characters[3] };  // Read only
+
+
+        *characters[0] = controlCharater(map,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map, c),&got_hit_player, mage_walking_allArray);
+        
+        character_take_damage(&characters,&got_hit_player,&take_damaged_once,4);
+        
+
+        int timer = set_wait_timer(0, 0);
+        if (timer)
+        {   
+            // Player hit dection
+            if((timer % 50) == 0){ // every 500ms
+                if(npc_hit_detection(characters2, player1.x,player1.y)){
+                    player1.offset = 36;
+                    player1.health -=1;
+                    if(player1.health < 0){
+                        player1.is_alive =0;
+                        game_status = 1;
+                    }
+                }
+            }
+
+            if ((timer % 10) == 0)  // animation update every 100ms
+            {   
+                for(int i = 0; i< 4; i++){
+                    if(characters[i]->got_hit == 1){
+                        characters[i]->offset = characters[i]->movedown_frame_offset;
+                        characters[i]->got_hit = 0;
+                        if(characters[i]->health == 0){
+                            characters[i]->is_alive = 0;
+                        }
+
+                    }
+
+                }
+                
+                npc1 = move(map, characters2, npc1, npc1_moves, 2, 0,&got_hit_player,goblin_walking_allArray,1);
+                npc2 = move(map, characters2, npc2, npc2_moves, 2, 0,&got_hit_player,gladiator_walking_allArray,1);
+                //npc3 = move(map, characters2, npc3, red_dude_npc_chase, 100, 0,&got_hit_player,red_dude_allArray,1);
+
+                // For bomb animation
+                for (int i = 0; i < player1.bomb_num; i++)
+                {
+                    player1.bomb[i].delay++;
+                    if (player1.bomb[i].delay > 20)
+                    { // delay 2 seconds
+                        player1.bomb[i].frame++;
+                        if (player1.bomb[i].frame > 11)
+                        {   
+                            if(player1.bomb[i].state){
+                                take_damaged_once = 1;
+                            }
+                            player1.bomb[i].frame = 0;
+                            player1.bomb[i].state = 0;
+                            player1.bomb[i].delay = 0;
+                        }
+                    }
+                }
+            }
+
+            set_wait_timer(1, 10000); // reset 10ms timer
+        }
+    }
+}
+
+void play_game2(int map[][28])
 {  
     draw_map_from_array(map);
-    draw_stats(5);
 
 
     moves death_npc_chase[100];
@@ -210,6 +321,8 @@ void play_game(int map[][28])
     int prior_player_health = player1.health;
     int game_status = 0;
 
+    draw_stats(player1.health);
+
     int player_prior_x[] = {0,0,0};
     int player_prior_y[] = {0, 0,0};
     int npc_timer[] = {150,200,250};
@@ -218,6 +331,8 @@ void play_game(int map[][28])
     set_wait_timer(1, 10000); // set 10ms
     while (1)
     {   
+        char c = getUart();
+
         if(prior_player_health != player1.health){
             drawRectARGB32(0,0,500,50,0x00000000,1);
             draw_stats(player1.health);
@@ -230,7 +345,6 @@ void play_game(int map[][28])
         human *characters[] = {&player1, &npc1, &npc2, &npc3};   // Write only
         human characters2[] = {*characters[0],*characters[1], *characters[2], *characters[3] };  // Read only
 
-        char c = getUart();
 
         *characters[0] = controlCharater(map,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map, c),&got_hit_player, mage_walking_allArray);
         
@@ -264,8 +378,6 @@ void play_game(int map[][28])
                     player1.offset = 36;
                     player1.health -=1;
                     if(player1.health < 0){
-                        //player1.offset = 43;
-                        //controlCharater(map,characters2, *characters[0], 'p', tracking_player_on_map(*characters[0], map, 'p'),&got_hit_player, mage_walking_allArray);
                         player1.is_alive =0;
                         game_status = 1;
                     }
@@ -278,11 +390,8 @@ void play_game(int map[][28])
             {   
                 for(int i = 0; i< 4; i++){
                     if(characters[i]->got_hit == 1){
-                        //*characters[i] = controlCharater(map,characters2, *characters[i],'t', 0, &got_hit_player,mage_walking_allArray);
                         characters[i]->offset = characters[i]->movedown_frame_offset;
                         characters[i]->got_hit = 0;
-                        // uart_dec(characters[i]->health);
-                        // uart_sendc('\n');
                         if(characters[i]->health == 0){
                             characters[i]->is_alive = 0;
                         }
@@ -290,11 +399,9 @@ void play_game(int map[][28])
                     }
 
                 }
-                npc1 = move(map, characters2, npc1, death_npc_chase, 100, 0,&got_hit_player,death_allArray);
-                npc2 = move(map, characters2, npc2, goblem_npc_chase, 100, 0,&got_hit_player,goblem_allArray);
-                npc3 = move(map, characters2, npc3, red_dude_npc_chase, 100, 0,&got_hit_player,red_dude_allArray);
-
-
+                npc1 = move(map, characters2, npc1, death_npc_chase, 100, 0,&got_hit_player,death_allArray,0);
+                npc2 = move(map, characters2, npc2, goblem_npc_chase, 100, 0,&got_hit_player,goblem_allArray,0);
+                npc3 = move(map, characters2, npc3, red_dude_npc_chase, 100, 0,&got_hit_player,red_dude_allArray,0);
 
                 // For bomb animation
                 for (int i = 0; i < player1.bomb_num; i++)
@@ -332,16 +439,20 @@ void sub_boss(){
 
     set_wait_timer(1, 10000); // set 10ms
 
-    int knight_timer[] = {10,20,25,30};
+    int knight_timer[] = {10,15,20,25};
     int counter[] = {0,0,0,0};
     int move_signal[] = {0,0,0,0};
     int player_prior_x[] = {knight1.x,knight2.x,knight3.x, knight4.x};
     int player_prior_y[] = {knight1.y, knight2.y,knight3.y, knight4.y};
     int prior_player_health = player1.health;
     int game_status = 0;
-    draw_stats(5);
+    draw_stats(player1.health);
+
+    int i = 0 ;
     while (1)
     {   
+        char c = getUart();
+
         if(prior_player_health != player1.health){
             drawRectARGB32(0,0,500,50,0x00000000,1);
             draw_stats(player1.health);
@@ -351,12 +462,10 @@ void sub_boss(){
         if(game_status == 1){
             break;
         }
-        
 
         human *characters[] = {&player1,&knight1,&knight2,&knight3,&knight4};   // Write only
         human characters2[] = {*characters[0],*characters[1],*characters[2], *characters[3], *characters[4]};  // Read only
 
-        char c = getUart();
 
         *characters[0] = controlCharater(map4,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map4, c),&got_hit_player, mage_walking_allArray);
 
@@ -369,6 +478,15 @@ void sub_boss(){
         {
             if ((timer % 10) == 0)
             {    
+
+
+                drawGameAsset(i,400,200,dragon_boss_width,dragon_boss_height,dargon_boss_allArray);
+                    i++;
+                    if(i > 7){
+                        i = 0;
+                    }
+                
+
                 //uart_dec(move_signal[0]);
                 //uart_sendc('\n');
                 for(int i = 0; i< 4; i++){
@@ -385,13 +503,12 @@ void sub_boss(){
                 for(int i = 0; i < 4; i++){
                     if(move_signal[i] != 3){        // Take hit phase
                         counter[i]++;
-                        if(counter[i] == knight_timer[0] && move_signal[i] == 2){ // attack phase
+                        if(counter[i] == knight_timer[i] && move_signal[i] == 2){ // attack phase
                             if(npc_hit_detection(characters2, player1.x,player1.y)){
-                                //*characters[0] = controlCharater(map4,characters2, *characters[0], 't', tracking_player_on_map(*characters[0], map4, 't'),&got_hit_player, mage_walking_allArray);
                                 player1.offset = 36;
                                 player1.health -=1;
                                 if(player1.health < 0){
-                                    player1.is_alive =0;
+                                    player1.is_alive = 0;
                                     game_status = 1;
                                 }
                             }
@@ -411,7 +528,7 @@ void sub_boss(){
             
                 knight1 = control_knight(player1, knight1,&move_signal[0],player_prior_x[0],player_prior_y[0],5);
                 knight2 = control_knight(player1, knight2,&move_signal[1],player_prior_x[1],player_prior_y[1],7);
-                knight3 = control_knight(player1, knight3,&move_signal[2],player_prior_x[2],player_prior_y[2],10);
+                knight3 = control_knight(player1, knight3,&move_signal[2],player_prior_x[2],player_prior_y[2],9);
                 knight4 = control_knight(player1, knight4,&move_signal[3],player_prior_x[3],player_prior_y[3],8);
 
                 for (int i = 0; i < player1.bomb_num; i++)
@@ -480,21 +597,9 @@ void main()
     // Initialize frame buffer
     framebf_init();
     // echo everything back
-    
-    human player1 = character1_init(38, 46 * 3, 9,0,8,mage_width,mage_height);
-    human npc1 = character1_init(38*1, 46 * 11, 9,0,8,mage_width,mage_height);
-
-    //dijkstra_find_route(flood_map, 11,1,3,1,distances);
-    //dijkstra_plan_route(flood_map,11,1,3,1,distances,npc_chase);
-    
-    //flood_fill(flood_map, 11, 3,0);
-    //plan_routes(npc1, &npc_chase);
-    //print_map(flood_map);
-    
     //play_game(map2);
-    play_game(map3);
+    play_game1(map2);
     //final_boss();
     //sub_boss();
-    //goblin_test();
     uart_puts("GAME OVER\n");
 }

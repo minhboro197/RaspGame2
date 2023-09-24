@@ -291,8 +291,8 @@ const unsigned long plus_health_range_range [] = {
 
 
 // Array of all bitmaps for convenience. (Total bytes used to store images in  = 624)
-const int wall_block_allArray_LEN = 4;
-const unsigned long *wall_block_allArray[4] = {
+const int wall_block_allArray_LEN = 7;
+const unsigned long *wall_block_allArray[7] = {
 	wall_block_Screenshot_2023_09_09_151241,
 	wall_block_wall_1,
 	wall_block_wall2_1,

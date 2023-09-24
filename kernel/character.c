@@ -24,7 +24,7 @@ void character_take_damage(human *characters[], int *got_hit_player,int *take_da
 
 }
 
-
+int wall_ignore = 5;
 // Track player on the map and collison dection with walls
 int tracking_player_on_map(human player, int map[][28], char c)
 {
@@ -39,28 +39,32 @@ int tracking_player_on_map(human player, int map[][28], char c)
 
     if (c == 'a')
     {   
-        if(map[bouding_box[2][0] / 46][bouding_box[2][2] / 38] > 0 || map[bouding_box[2][1] / 46][(player.x - clearance_x) / 38] > 0)
+        if( (map[bouding_box[2][0] / 46][bouding_box[2][2] / 38] > 0 || map[bouding_box[2][1] / 46][(player.x - clearance_x) / 38] > 0)
+            && (map[bouding_box[2][0] / 46][bouding_box[2][2] / 38] < wall_ignore || map[bouding_box[2][1] / 46][(player.x - clearance_x) / 38] < wall_ignore ))
         {
             return 1;
         }
     }
     else if (c == 'd')
     {
-        if (map[bouding_box[3][0] / 46][bouding_box[3][2] / 38] > 0 || (map[bouding_box[3][1] / 46][bouding_box[3][2] / 38] > 0))
+        if ((map[bouding_box[3][0] / 46][bouding_box[3][2] / 38] > 0 || (map[bouding_box[3][1] / 46][bouding_box[3][2] / 38] > 0))
+            && (map[bouding_box[3][0] / 46][bouding_box[3][2] / 38] < wall_ignore || (map[bouding_box[3][1] / 46][bouding_box[3][2] / 38] < wall_ignore)))
         {
             return 1;
         }
     }
     else if (c == 'w')
     {
-        if (map[bouding_box[0][0]/ 46][bouding_box[0][1] / 38] > 0 || map[bouding_box[0][0] / 46][bouding_box[0][2] / 38] > 0)
+        if ((map[bouding_box[0][0]/ 46][bouding_box[0][1] / 38] > 0 || map[bouding_box[0][0] / 46][bouding_box[0][2] / 38] > 0)
+            && (map[bouding_box[0][0]/ 46][bouding_box[0][1] / 38] < wall_ignore || map[bouding_box[0][0] / 46][bouding_box[0][2] / 38] < wall_ignore))
         {
             return 1;
         }
     }
     else if (c == 's')
     {
-        if (map[bouding_box[1][0] / 46][bouding_box[1][1] / 38] > 0 || map[bouding_box[1][0] / 46][bouding_box[1][2] / 38] > 0)
+        if ((map[bouding_box[1][0] / 46][bouding_box[1][1] / 38] > 0 || map[bouding_box[1][0] / 46][bouding_box[1][2] / 38] > 0)
+            && (map[bouding_box[1][0] / 46][bouding_box[1][1] / 38] < wall_ignore || map[bouding_box[1][0] / 46][bouding_box[1][2] / 38] < wall_ignore))
         {
             return 1;
         }
@@ -276,7 +280,7 @@ human controlCharater(int map[][28], human characters[], human player1, char c, 
 }
 
 
-human move(int map[][28], human players[], human npc, moves moves[], unsigned int move_size, int is_collision, int *hit_player, const unsigned long *frame_array[])
+human move(int map[][28], human players[], human npc, moves moves[], unsigned int move_size, int is_collision, int *hit_player, const unsigned long *frame_array[], int is_loop)
 {
     //human temp = controlCharater(players, npc, moves[npc.move_index].direction, is_collision, hit_player, frame_array);
     human temp = controlCharater(map,players, npc, moves[npc.move_index].direction, tracking_player_on_map(npc, map, moves[npc.move_index].direction), hit_player, frame_array);
