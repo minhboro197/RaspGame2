@@ -59,24 +59,24 @@ void reset_flood_map(int map[][28]){
     // Initialize distances to infinity
     for (int i = 0; i < 17; i++) {
         for (int j = 0; j < 28; j++) {
-            distances[i][j] = 2147483647;
+            distances[i][j] = 2147483647;   // set to max integer
         }
     }
 }
 
 void dijkstra_find_route(int map[][28], int x, int y, int x_end, int y_end, int distance[][28]){
-    if(map[x_end][y_end] != -2){
+    if(map[x_end][y_end] != -2){ // if not a road return
         return;
     }
-    if(x == x_end && y == y_end){
+    if(x == x_end && y == y_end){   // if reach destination return
         return;
     }
 
-    for(int i =0; i < 4; i++){
+    for(int i =0; i < 4; i++){  // Check all 4 direction
         int next_move[] = {x + dx[i], y + dy[i]};
 
         if(next_move[0] < 17 && next_move[1] < 28 && map[next_move[0]][next_move[1]] != -1){
-            int newDistant = distance[x][y] +1;
+            int newDistant = distance[x][y] +1; // turn to interger min value due to integer overflow
 
             if(newDistant < distance[next_move[0]][next_move[1]]){
                 distance[next_move[0]][next_move[1]] = newDistant;
@@ -87,7 +87,7 @@ void dijkstra_find_route(int map[][28], int x, int y, int x_end, int y_end, int 
 }
 
 void dijkstra_plan_route(int map[][28], int x, int y,int x_end, int y_end, int distance[][28], moves *npc_chase){
-    if(map[x_end][y_end] != -2){
+    if(map[x_end][y_end] != -2){   // if not road return
         return;
     }
     
@@ -96,7 +96,7 @@ void dijkstra_plan_route(int map[][28], int x, int y,int x_end, int y_end, int d
 
     while(current_x != x || current_y != y){
         if((current_x == x -1 && current_y == y) || (current_x == x + 1 && current_y == y) || (current_x == x && current_y == y-1) ||(current_x == x && current_y == y+1) ){
-            break;
+            break;  // if arrive near player stop
         }
         
         for(int i = 0; i < 4; i++){
@@ -105,7 +105,7 @@ void dijkstra_plan_route(int map[][28], int x, int y,int x_end, int y_end, int d
                 
                 current_x = next_move[0];
                 current_y = next_move[1];
-                map[current_x][current_y] = 8;
+                map[current_x][current_y] = 8;  // mark fastest route as 8
                 break;
             }
         }
@@ -118,7 +118,7 @@ void dijkstra_plan_route(int map[][28], int x, int y,int x_end, int y_end, int d
     while(1){
         int min_index = 0;
         if((current_x == x_end -1 && current_y == y_end) || (current_x == x_end + 1 && current_y == y_end) || (current_x == x_end && current_y == y_end-1) ||(current_x == x_end && current_y == y_end+1) ){
-            break;
+            break;  // if arrived near player stop
         }
         for(int i = 0; i< 4; i++){
             int next_move[] = {current_x + dx[i], current_y + dy[i]};
@@ -128,6 +128,8 @@ void dijkstra_plan_route(int map[][28], int x, int y,int x_end, int y_end, int d
             }
 
         }
+
+        // compute moves for npc
         if(min_index == 0){
             current_x -= 1;
             npc_chase[index].direction = 'w';
@@ -196,22 +198,25 @@ human play_game1(int map[][28]){
     //////////////////////////////////
     
 
+    // Keep track of previous stat
     int prior_player_health = player1.health;
     int prior_player_bomb_damage = player1.bomb_damage;
     int prior_player_bomb_range = player1.bomb_range;
     int game_status = 0;
 
+    // draw stat
     draw_stats(player1.health, player1.bomb_damage, player1.bomb_range);
 
     // 1 seconds = 1000000
     set_wait_timer(1, 10000); // set 10ms
     while (1)
     {   
+        //update new stat if there is changes
         if(player1.x/block_width == 25 && player1.y/block_height == 17){
             return player1;
         }
         char c = getUart();
-
+        //update new stat if there is changes
         if(prior_player_health != player1.health || prior_player_bomb_damage != player1.bomb_damage || prior_player_bomb_range != player1.bomb_range){
             drawRectARGB32(0,0,500,50,0x00000000,1);
             draw_stats(player1.health, player1.bomb_damage, player1.bomb_range);
@@ -219,7 +224,7 @@ human play_game1(int map[][28]){
             prior_player_bomb_damage = player1.bomb_damage;
             prior_player_bomb_range = player1.bomb_range;
         }
-        if(game_status == 1){
+        if(game_status == 1){   // break if false game
             break;
         }
 
@@ -229,7 +234,8 @@ human play_game1(int map[][28]){
 
         *characters[0] = controlCharater(map,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map, c),&got_hit_player, mage_walking_allArray);
         
-        character_take_damage(&characters,&got_hit_player,&take_damaged_once,7);
+        // got_hit_player is npc got hit by the bomb, update their health if hit
+        character_take_damage(&characters,&got_hit_player,&take_damaged_once,7); 
         
 
         int timer = set_wait_timer(0, 0);
@@ -295,14 +301,18 @@ human play_game1(int map[][28]){
 
 human play_game2(int map[][28], human player1)
 {   
+    // span player top left
     player1.x = block_width*1;
     player1.y = block_height*3;
     drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
     draw_map_from_array(map);
 
+
+    // list int all item type and their coordinate
     Items item1 = {1,13,'r',1};
     Items item2 = {23,13,'h',1};
     Items item3 = {25,3,'d',1};
+
 
     Items items[] = {item1,item2,item3}; 
 
@@ -324,6 +334,7 @@ human play_game2(int map[][28], human player1)
     
     //print_map(flood_map);
 
+    // Keep track of previous stat
     int prior_player_health = player1.health;
     int prior_player_bomb_damage = player1.bomb_damage;
     int prior_player_bomb_range = player1.bomb_range;
@@ -340,7 +351,7 @@ human play_game2(int map[][28], human player1)
     while (1)
     {   
         char c = getUart();
-
+        //update new stat if there is changes
         if(prior_player_health != player1.health || prior_player_bomb_damage != player1.bomb_damage || prior_player_bomb_range != player1.bomb_range){
             drawRectARGB32(0,0,500,50,0x00000000,1);
             draw_stats(player1.health, player1.bomb_damage, player1.bomb_range);
@@ -363,6 +374,7 @@ human play_game2(int map[][28], human player1)
 
         *characters[0] = controlCharater(map,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map, c),&got_hit_player, mage_walking_allArray);
         
+        // got_hit_player is npc got hit by the bomb, update their health if hit
         character_take_damage(&characters,&got_hit_player,&take_damaged_once,5);
         
         game_status = 1;
@@ -398,7 +410,7 @@ human play_game2(int map[][28], human player1)
             for(int i= 1; i < 5; i++){  // plan best route for all npcs
                 if(timer % npc_timer[i-1] == 0){
                     if((player1.x != player_prior_x[i-1] || player1.y != player_prior_y[i-1] ) && characters[i]->is_alive){
-                    player_prior_x[i-1] = player1.x;
+                    player_prior_x[i-1] = player1.x;    // update player coordinate for each npc at different time
                     player_prior_y[i-1] = player1.y;
                     drawRectARGB32(characters[i]->x, characters[i]->y, characters[i]->x + characters[i]->frame_width, characters[i]->y + characters[i]->frame_height, 0x00000000, 1);
                     characters[i]->x = (characters[i]->x/block_width) * block_width;
@@ -494,7 +506,7 @@ int final_boss(human player1){
         player_prior_y[i] = player1.y;
     }
 
-
+    // save previous stat
     int prior_player_health = player1.health;
     int prior_player_bomb_damage = player1.bomb_damage;
     int prior_player_bomb_range = player1.bomb_range;
@@ -508,11 +520,12 @@ int final_boss(human player1){
     while (1)
     {   
         char c = getUart();
-
+        // update if stats changed
         if(prior_dragon_boss_health != dragon_boss.health){
             draw_boss_stats(dragon_boss.health);
             prior_dragon_boss_health = dragon_boss.health;
         }
+        // update if stats changed
         if(prior_player_health != player1.health || prior_player_bomb_damage != player1.bomb_damage || prior_player_bomb_range != player1.bomb_range){
             draw_stats(player1.health, player1.bomb_damage, player1.bomb_range);
             prior_player_health = player1.health;
@@ -521,9 +534,9 @@ int final_boss(human player1){
         }
 
         if(game_status == 1){
-            return 1;
+            return 1;   // victory
         }else if(game_status == 2){
-            return 2;
+            return 2;   // loose
         }
 
         human *characters[] = {&player1,&knight1,&knight2,&knight3, &knight4, &dragon_boss};   // Write only
@@ -531,7 +544,7 @@ int final_boss(human player1){
 
 
         *characters[0] = controlCharater(map4,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map4, c),&got_hit_player, mage_walking_allArray);
-
+        // got_hit_player is npc got hit by the bomb, update their health if hit
         character_take_damage(&characters,&got_hit_player,&take_damaged_once,6);
         
         game_status = 1;
@@ -545,11 +558,12 @@ int final_boss(human player1){
         int timer = set_wait_timer(0, 0);
         if (timer)
         {   
+            // if player die escape
             if(player1.health <= 0){
                 player1.is_alive = 0;
                 game_status = 2;
             }
-            if(timer % 100 == 0){
+            if(timer % 100 == 0){   // check npc and player collide every seconds
                 if(npc_hit_detection(characters2, player1.x,player1.y) == 1){
                     player1.health--;
                     
@@ -557,7 +571,7 @@ int final_boss(human player1){
             }
             if ((timer % 10) == 0)
             {    
-                for(int i = 0; i < 5; i++){
+                for(int i = 0; i < 5; i++){ // update player coordinate for each npc at different time
                     counter[i+4]++;
                     if(counter[i+4] == knight_timer[i+4]){
                         player_prior_x[i+4] = player1.x;
@@ -601,6 +615,7 @@ int final_boss(human player1){
                     }
                     
                 }
+
                 dragon_boss = control_dragon(&player1,dragon_boss,&explosion, player_prior_x[4], player_prior_y[4],20);
                 if(dragon_boss.health < 5){
                      knight1 = control_knight(player1, knight1,&move_signal[0],player_prior_x[0],player_prior_y[0],5);
