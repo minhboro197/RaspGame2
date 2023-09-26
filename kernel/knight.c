@@ -3,6 +3,7 @@
 #include "boss/dragons.h"
 #include "../uart/uart1.h"
 #include "dragon_fireball.h"
+
 int i = 0;
 int j = 0;
 int k = 0;
@@ -11,10 +12,9 @@ int l = 0;
 human control_dragon(human *player1, human dragon,Explosion *dragon_explosion, int player1_prior_x, int player1_prior_y,int speed){
     if(dragon.is_alive == 0){
         if(dragon.x == dragon.prior_x){
-            drawRectARGB32(dragon.prior_x+30,dragon.prior_y-20,dragon.prior_x+dragon.frame_width,dragon.prior_y + dragon.frame_height,0x00000000,1);
+            drawRectARGB32(dragon.prior_x-30,dragon.prior_y-30,dragon.prior_x+dragon.frame_width+30,dragon.prior_y + dragon.frame_height+30,0x00000000,1);
         
         }
-        uart_puts("dead dragon\n");
         dragon.x = 500;
         dragon.y = 0;
         return dragon;
@@ -24,7 +24,6 @@ human control_dragon(human *player1, human dragon,Explosion *dragon_explosion, i
     drawRectARGB32(dragon_explosion->prior_x, dragon_explosion->prior_y, dragon_explosion->prior_x + dragon_explosion_width, dragon_explosion->prior_y + dragon_explosion_height, 0x00000000, 1);
 
     if(absolute(dragon_explosion->x - player1->x) < 25 && absolute(dragon_explosion->y - player1->y )< 25 ){
-        uart_puts("bruh\n");
         player1->health--;
         dragon_explosion->x = dragon.x +dragon.frame_width/2;
         dragon_explosion->y = dragon.y +dragon.frame_height/2;
@@ -69,8 +68,7 @@ human control_dragon(human *player1, human dragon,Explosion *dragon_explosion, i
     return dragon;
 }
 human control_knight(human player1, human knight, int *move_signal, int player1_prior_x, int player1_prior_y, int speed){
-    //uart_dec(player1_prior_x- knight.x);
-    //uart_sendc('\n');
+
     if(knight.is_alive == 0){
         knight.x = 500;
         knight.y = 0;

@@ -14,7 +14,7 @@
 #include "./npcs/eye_ball.h"
 #include "./welcome_image.h"
 
-// the compiler randomly ask for memcpy.memset so i included it here
+// the compiler randomly ask for memcpy,memset so i included it here
 void *memcpy(void *dest, const void *src, int count)
 {
     char *d = dest;
@@ -79,10 +79,6 @@ void dijkstra_find_route(int map[][28], int x, int y, int x_end, int y_end, int 
             int newDistant = distance[x][y] +1;
 
             if(newDistant < distance[next_move[0]][next_move[1]]){
-                //uart_dec(next_move[0]);
-                //uart_sendc(',');
-                //uart_dec(next_move[1]);
-                //uart_sendc('\n');
                 distance[next_move[0]][next_move[1]] = newDistant;
                 dijkstra_find_route(map,next_move[0], next_move[1],x_end,y_end, distance);
             }
@@ -105,16 +101,11 @@ void dijkstra_plan_route(int map[][28], int x, int y,int x_end, int y_end, int d
         
         for(int i = 0; i < 4; i++){
             int next_move[] = {current_x + dx[i], current_y + dy[i]};
-            //uart_dec(next_move[0]);
-            //uart_sendc(',');
-            //uart_dec(next_move[1]);
-            //uart_sendc('\n');
             if(next_move[0] < 17 && next_move[1] < 28 && distance[next_move[0]][next_move[1]] == distance[current_x][current_y] -1){
                 
                 current_x = next_move[0];
                 current_y = next_move[1];
                 map[current_x][current_y] = 8;
-                //uart_puts("bro2\n");
                 break;
             }
         }
@@ -126,16 +117,6 @@ void dijkstra_plan_route(int map[][28], int x, int y,int x_end, int y_end, int d
     current_y = y;
     while(1){
         int min_index = 0;
-        //uart_dec(x);
-        //uart_sendc(',');
-        //uart_dec(y);
-        //uart_sendc('\n');
-        //uart_puts("broas\n");
-
-            //uart_dec(current_x);
-            //uart_sendc(',');
-            //uart_dec(current_y);
-            //uart_sendc('\n');
         if((current_x == x_end -1 && current_y == y_end) || (current_x == x_end + 1 && current_y == y_end) || (current_x == x_end && current_y == y_end-1) ||(current_x == x_end && current_y == y_end+1) ){
             break;
         }
@@ -175,7 +156,6 @@ int got_hit_player = -1;
 human play_game1(int map[][28]){
     draw_map_from_array(map);
 
-
     ////////////////////////////
     // NPC, Player init
     moves npc1_moves[] = {
@@ -190,11 +170,17 @@ human play_game1(int map[][28]){
         {'a', {10,3}},
         {'d', {14,3}}};
 
-        moves npc4_moves[] = {
-        {'d', {20,3}},
-        {'a', {17,3}}};
-    
-    moves *all_npc_moves[] = {&npc1_moves, &npc2_moves};
+    moves npc4_moves[] = {
+    {'d', {20,3}},
+    {'a', {17,3}}};
+
+    moves npc5_moves[] = {
+    {'s', {17,11}},
+    {'w', {17,9}}};
+
+    moves npc6_moves[] = {
+    {'w', {23,6}},
+    {'s', {23,10}}};
     
 
     // wall block width and height is 38 and 46
@@ -203,18 +189,19 @@ human play_game1(int map[][28]){
 
     human npc1 = character1_init(block_width * 1, block_height * 11, 7,1,6,goblin_width,goblin_height,1);
     human npc2 = character1_init(block_width * 5, block_height * 9, 4,1,3,gladiator_width,gladiator_height,1);
-
     human npc3 = character1_init(block_width * 14, block_height * 3, 3,1,2,mush_room_width,mush_room_height,1);
     human npc4 = character1_init(block_width * 17, block_height * 3, 3,1,2,eye_ball_width,eye_ball_height,1);
-    
-    //human npc5 = character1_init(block_width * 14, block_height * 3, 3,1,2,red_dude_width,red_dude_height,1);
+    human npc5 = character1_init(block_width * 17, block_height * 9, 3,1,2,red_dude_width,red_dude_height,1);
+    human npc6 = character1_init(block_width * 23, block_height * 10, 3,1,2,mush_room_width,mush_room_height,1);
     //////////////////////////////////
     
 
     int prior_player_health = player1.health;
+    int prior_player_bomb_damage = player1.bomb_damage;
+    int prior_player_bomb_range = player1.bomb_range;
     int game_status = 0;
 
-    draw_stats(player1.health);
+    draw_stats(player1.health, player1.bomb_damage, player1.bomb_range);
 
     // 1 seconds = 1000000
     set_wait_timer(1, 10000); // set 10ms
@@ -225,22 +212,24 @@ human play_game1(int map[][28]){
         }
         char c = getUart();
 
-        if(prior_player_health != player1.health){
+        if(prior_player_health != player1.health || prior_player_bomb_damage != player1.bomb_damage || prior_player_bomb_range != player1.bomb_range){
             drawRectARGB32(0,0,500,50,0x00000000,1);
-            draw_stats(player1.health);
+            draw_stats(player1.health, player1.bomb_damage, player1.bomb_range);
             prior_player_health = player1.health;
+            prior_player_bomb_damage = player1.bomb_damage;
+            prior_player_bomb_range = player1.bomb_range;
         }
         if(game_status == 1){
             break;
         }
 
-        human *characters[] = {&player1, &npc1, &npc2, &npc3,&npc4};   // Write only
-        human characters2[] = {*characters[0],*characters[1], *characters[2], *characters[3], *characters[4] };  // Read only
+        human *characters[] = {&player1, &npc1, &npc2, &npc3,&npc4,&npc5,&npc6};   // Write only
+        human characters2[] = {*characters[0],*characters[1], *characters[2], *characters[3], *characters[4], *characters[5],*characters[6]};  // Read only
 
 
         *characters[0] = controlCharater(map,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map, c),&got_hit_player, mage_walking_allArray);
         
-        character_take_damage(&characters,&got_hit_player,&take_damaged_once,5);
+        character_take_damage(&characters,&got_hit_player,&take_damaged_once,7);
         
 
         int timer = set_wait_timer(0, 0);
@@ -261,7 +250,7 @@ human play_game1(int map[][28]){
             if ((timer % 10) == 0)  // animation update every 100ms
             {   
                 // Check bomb hit for all characters
-                for(int i = 0; i< 5; i++){
+                for(int i = 0; i< 7; i++){
                     if(characters[i]->got_hit == 1){
                         characters[i]->got_hit = 0;
                         if(characters[i]->health == 0){
@@ -272,11 +261,13 @@ human play_game1(int map[][28]){
                 
 
                 // Move npcs
-                npc1 = move(map, characters2, npc1, npc1_moves, 2, 0,&got_hit_player,goblin_walking_allArray,1);
-                npc2 = move(map, characters2, npc2, npc2_moves, 2, 0,&got_hit_player,gladiator_walking_allArray,1);
-                npc3 = move(map, characters2, npc3, npc3_moves, 2, 0,&got_hit_player,mush_room_allArray,1);
-                npc4 = move(map, characters2, npc4, npc4_moves, 2, 0,&got_hit_player,eye_ball_allArray,1);
-                
+                npc1 = move(map, characters2, npc1, npc1_moves, 2,&got_hit_player,goblin_walking_allArray,1);
+                npc2 = move(map, characters2, npc2, npc2_moves, 2,&got_hit_player,gladiator_walking_allArray,1);
+                npc3 = move(map, characters2, npc3, npc3_moves, 2,&got_hit_player,mush_room_allArray,1);
+                npc4 = move(map, characters2, npc4, npc4_moves, 2,&got_hit_player,eye_ball_allArray,1);
+                npc5 = move(map, characters2, npc5, npc5_moves, 2,&got_hit_player,red_dude_allArray,1);
+                npc6 = move(map, characters2, npc6, npc6_moves, 2,&got_hit_player,mush_room_allArray,1);
+
                 // For bomb animation
                 for (int i = 0; i < player1.bomb_num; i++)
                 {
@@ -308,42 +299,41 @@ human play_game2(int map[][28], human player1)
     player1.y = block_height*3;
     drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
     draw_map_from_array(map);
-    char items_type[] = {'r','h','d'};
-    int items_location[][2] = {{1,13}, {25, 3}, {23,13}};
 
     Items item1 = {1,13,'r',1};
-    Items item2 = {25,3,'h',1};
-    Items item3 = {23,13,'d',1};
+    Items item2 = {23,13,'h',1};
+    Items item3 = {25,3,'d',1};
 
     Items items[] = {item1,item2,item3}; 
 
     moves death_npc_chase[100];
     moves red_dude_npc_chase[100];
     moves goblem_npc_chase[100];
+    moves mush_room_chase[100];
 
-    moves *npc_chases[] = {&death_npc_chase, &goblem_npc_chase, &red_dude_npc_chase};
-    
+    moves *npc_chases[] = {&death_npc_chase, &goblem_npc_chase, &red_dude_npc_chase, &mush_room_chase};
+    const unsigned long **npc_array[] = {death_allArray,goblem_allArray,red_dude_allArray, mush_room_allArray};
 
     // wall block width and height is 38 and 46
     // span characters in the below format
-    //human player1 = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height,5);
 
-    human npc1 = character1_init(block_width * 1, block_height * 11, 3,1,2,death_width,death_height,1);
-    human npc2 = character1_init(block_width * 5, block_height * 9, 3,1,2,goblem_width,goblem_height,1);
-    human npc3 = character1_init(block_width * 15, block_height * 3, 3,1,2,red_dude_width,red_dude_height,1);
-
+    human npc1 = character1_init(block_width * 1, block_height * 14, 3,1,2,death_width,death_height,5);
+    human npc2 = character1_init(block_width * 8, block_height * 9, 3,1,2,goblem_width,goblem_height,5);
+    human npc3 = character1_init(block_width * 15, block_height * 3, 3,1,2,red_dude_width,red_dude_height,5);
+    human npc4 = character1_init(block_width * 8, block_height * 3, 3,1,2,mush_room_width,mush_room_height,5);
     
-    const unsigned long **npc_array[] = {death_allArray,goblem_allArray,red_dude_allArray};
     //print_map(flood_map);
 
     int prior_player_health = player1.health;
+    int prior_player_bomb_damage = player1.bomb_damage;
+    int prior_player_bomb_range = player1.bomb_range;
     int game_status = 0;
 
-    draw_stats(player1.health);
+    draw_stats(player1.health, player1.bomb_damage, player1.bomb_range);
 
-    int player_prior_x[] = {0,0,0};
-    int player_prior_y[] = {0, 0,0};
-    int npc_timer[] = {150,200,250};
+    int player_prior_x[] = {0,0,0,0};
+    int player_prior_y[] = {0, 0,0,0};
+    int npc_timer[] = {150,200,250,300};
     
     // 1 seconds = 1000000
     set_wait_timer(1, 10000); // set 10ms
@@ -351,13 +341,14 @@ human play_game2(int map[][28], human player1)
     {   
         char c = getUart();
 
-        if(prior_player_health != player1.health){
+        if(prior_player_health != player1.health || prior_player_bomb_damage != player1.bomb_damage || prior_player_bomb_range != player1.bomb_range){
             drawRectARGB32(0,0,500,50,0x00000000,1);
-            draw_stats(player1.health);
+            draw_stats(player1.health, player1.bomb_damage, player1.bomb_range);
             prior_player_health = player1.health;
+            prior_player_bomb_damage = player1.bomb_damage;
+            prior_player_bomb_range = player1.bomb_range;
         }
-        //uart_dec(game_status);
-        //uart_sendc('\n');
+
         if(game_status == 1){
             player1.is_alive = 1;
             return player1;
@@ -366,16 +357,16 @@ human play_game2(int map[][28], human player1)
             return player1;
         }
 
-        human *characters[] = {&player1, &npc1, &npc2, &npc3};   // Write only
-        human characters2[] = {*characters[0],*characters[1], *characters[2], *characters[3] };  // Read only
+        human *characters[] = {&player1, &npc1, &npc2, &npc3,&npc4};   // Write only
+        human characters2[] = {*characters[0],*characters[1], *characters[2], *characters[3],*characters[4] };  // Read only
 
 
         *characters[0] = controlCharater(map,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map, c),&got_hit_player, mage_walking_allArray);
         
-        character_take_damage(&characters,&got_hit_player,&take_damaged_once,4);
+        character_take_damage(&characters,&got_hit_player,&take_damaged_once,5);
         
         game_status = 1;
-        for(int i = 1; i < 4; i++){
+        for(int i = 1; i < 5; i++){
             if(characters[i]->is_alive == 1){
                 game_status = 0;
             }
@@ -395,7 +386,7 @@ human play_game2(int map[][28], human player1)
                     player1.health++;
                     uart_puts("health item\n");
                 }else if(items[i].type == 'd'){
-                    player1.bomb_damage+=5;
+                    player1.bomb_damage+=2;
                     uart_puts("damage item\n");
                 }
             }
@@ -404,7 +395,7 @@ human play_game2(int map[][28], human player1)
         int timer = set_wait_timer(0, 0);
         if (timer)
         {   
-            for(int i= 1; i < 4; i++){  // plan best route for all npcs
+            for(int i= 1; i < 5; i++){  // plan best route for all npcs
                 if(timer % npc_timer[i-1] == 0){
                     if((player1.x != player_prior_x[i-1] || player1.y != player_prior_y[i-1] ) && characters[i]->is_alive){
                     player_prior_x[i-1] = player1.x;
@@ -432,7 +423,7 @@ human play_game2(int map[][28], human player1)
                 }
             }
 
-            for(int i = 1; i< 4; i++){  // NPC take damge
+            for(int i = 1; i< 5; i++){  // NPC take damge
                     if(characters[i]->got_hit == 1){
                         *characters[i] = controlCharater(map,characters2, *characters[i], 'h', tracking_player_on_map(*characters[i], map, 'h'),&got_hit_player, npc_array[i-1]);
                         characters[i]->got_hit = 0;
@@ -445,9 +436,9 @@ human play_game2(int map[][28], human player1)
 
             if ((timer % 10) == 0)  // animation update every 100ms
             {   
-                *characters[1] = move(map, characters2, *characters[1], death_npc_chase, 100, 0,&got_hit_player,npc_array[0],0);
-                npc2 = move(map, characters2, npc2, goblem_npc_chase, 100, 0,&got_hit_player,npc_array[1],0);
-                npc3 = move(map, characters2, npc3, red_dude_npc_chase, 100, 0,&got_hit_player,npc_array[2],0);
+                for(int i = 1; i < 5; i++){
+                    *characters[i] = move(map, characters2, *characters[i], npc_chases[i-1], 100,&got_hit_player,npc_array[i-1],0);
+                }
 
                 // For bomb animation
                 for (int i = 0; i < player1.bomb_num; i++)
@@ -474,10 +465,11 @@ human play_game2(int map[][28], human player1)
     }
 }
 
-void final_boss(human player1){
+int final_boss(human player1){
     player1.x = 500;
-    player1.y = 400;
+    player1.y = 500;
     //player1.bomb_damage = 5;
+    
     drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
     draw_map_from_array(map4);
 
@@ -501,23 +493,37 @@ void final_boss(human player1){
         player_prior_x[i] = player1.x ;
         player_prior_y[i] = player1.y;
     }
-    int prior_player_health = player1.health;
-    int game_status = 0;
-    draw_stats(player1.health);
 
-    int i = 0 ;
+
+    int prior_player_health = player1.health;
+    int prior_player_bomb_damage = player1.bomb_damage;
+    int prior_player_bomb_range = player1.bomb_range;
+    int prior_dragon_boss_health = dragon_boss.health;
+
+    int game_status = 0;
+    
+    draw_boss_stats(dragon_boss.health);
+    draw_stats(player1.health, player1.bomb_damage, player1.bomb_range);
+
     while (1)
     {   
         char c = getUart();
 
-        if(prior_player_health != player1.health){
-            drawRectARGB32(0,0,500,50,0x00000000,1);
-            draw_stats(player1.health);
+        if(prior_dragon_boss_health != dragon_boss.health){
+            draw_boss_stats(dragon_boss.health);
+            prior_dragon_boss_health = dragon_boss.health;
+        }
+        if(prior_player_health != player1.health || prior_player_bomb_damage != player1.bomb_damage || prior_player_bomb_range != player1.bomb_range){
+            draw_stats(player1.health, player1.bomb_damage, player1.bomb_range);
             prior_player_health = player1.health;
+            prior_player_bomb_damage = player1.bomb_damage;
+            prior_player_bomb_range = player1.bomb_range;
         }
 
         if(game_status == 1){
-            break;
+            return 1;
+        }else if(game_status == 2){
+            return 2;
         }
 
         human *characters[] = {&player1,&knight1,&knight2,&knight3, &knight4, &dragon_boss};   // Write only
@@ -528,13 +534,20 @@ void final_boss(human player1){
 
         character_take_damage(&characters,&got_hit_player,&take_damaged_once,6);
         
+        game_status = 1;
+        for(int i = 1; i < 6; i++){
+            if(characters[i]->is_alive == 1){
+                game_status = 0;
+            }
+        }
         
         
         int timer = set_wait_timer(0, 0);
         if (timer)
         {   
             if(player1.health <= 0){
-                game_status = 1;
+                player1.is_alive = 0;
+                game_status = 2;
             }
             if(timer % 100 == 0){
                 if(npc_hit_detection(characters2, player1.x,player1.y) == 1){
@@ -552,8 +565,7 @@ void final_boss(human player1){
                         counter[i+4] = 0;
                     }
                 }
-                //uart_dec(move_signal[0]);
-                //uart_sendc('\n');
+
                 for(int i = 0; i< 5; i++){
                     if(characters[i+1]->got_hit){
                         move_signal[i] = 4;   // move to huting phase
@@ -575,10 +587,6 @@ void final_boss(human player1){
                             if(npc_hit_detection(characters2, player1.x,player1.y)){
                                 player1.offset = 36;
                                 player1.health -=1;
-                                if(player1.health < 0){
-                                    player1.is_alive = 0;
-                                    game_status = 1;
-                                }
                             }
                             if(player1.x != player_prior_x[i] || player1.y != player_prior_y[i]){
                                 move_signal[i] = 0;
@@ -661,6 +669,11 @@ void main()
     promt_continue();
 
     human temp = play_game1(map2);
+    if(temp.is_alive == 0){
+        draw_game_status(2);
+        uart_puts("GAME OVER\n");
+        return;
+    }
     drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
     drawString(180,200, "Beyond the labyrinth's first trials, a new threat looms – relentless monsters hot on our hero's ", 0x0d);
     drawString(180,200+20, "heels. Escape is paramount. Scattered throughout the maze lie essential items, the keys to ", 0x0d);
@@ -674,8 +687,13 @@ void main()
     drawString(450,200+20*12, "Press P to continue", 0x0d);
     promt_continue();
 
+    //human temp = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height,5);
     human temp2 = play_game2(map3,temp);
-
+    if(temp.is_alive == 0){
+        draw_game_status(2);
+        uart_puts("GAME OVER\n");
+        return;
+    }
     drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
     drawString(180,200, "At the heart of the labyrinth, where darkness and danger converge, our hero's journey ", 0x0d);
     drawString(180,200+20, "reaches its climax. A formidable adversary awaits – a powerful dragon, a guardian of ancient ", 0x0d);
@@ -692,8 +710,13 @@ void main()
     drawString(450,200+20*16, "Press P to continue", 0x0d);
     promt_continue();
 
-    //human temp = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height,5);
-    final_boss(temp);
-    
-    uart_puts("GAME OVER\n");
+    //human temp2 = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height,5);
+    int result = final_boss(temp2);
+    if(result == 1){
+        draw_game_status(1);
+        uart_puts("VICTORY");
+    }else{
+        draw_game_status(2);
+        uart_puts("GAME OVER\n");
+    }
 }

@@ -9,9 +9,6 @@ void character_take_damage(human *characters[], int *got_hit_player,int *take_da
         for(int i = 0; i <size; i++){
             if(*take_damaged_once == 1){
                 if(*got_hit_player == i){
-                    uart_dec(i);
-                    uart_sendc('\n');
-                    uart_puts("hit\n");
                     if(i == 0){
                         characters[i]->offset = 36;
                     }
@@ -25,21 +22,80 @@ void character_take_damage(human *characters[], int *got_hit_player,int *take_da
                 }
             }
         }
-
 }
 
 int wall_ignore = 5;
 // Track player on the map and collison dection with walls
+
+unsigned int absolute(int num)
+{
+    if (num < 0)
+    {
+        num = num * -1;
+        return num;
+    }
+    return num;
+}
+
+void reverse(char str[], int length) {
+    int start = 0;
+    int end = length - 1;
+    while (start < end) {
+        char temp = str[start];
+        str[start] = str[end];
+        str[end] = temp;
+        start++;
+        end--;
+    }
+}
+
+char* int_to_string(int num, char* str, int base) {
+    int i = 0;
+    int is_negative = 0;
+
+    // Handle 0 explicitly
+    if (num == 0) {
+        str[i++] = '0';
+        str[i] = '\0';
+        return str;
+    }
+
+    // Handle negative numbers for base 10
+    if (num < 0 && base == 10) {
+        is_negative = 1;
+        num = -num;
+    }
+
+    // Convert the number to a string
+    while (num != 0) {
+        int rem = num % base;
+        str[i++] = (rem < 10) ? rem + '0' : rem + 'a' - 10;
+        num = num / base;
+    }
+
+    // Append '-' for negative numbers
+    if (is_negative)
+        str[i++] = '-';
+
+    str[i] = '\0';
+
+    // Reverse the string
+    reverse(str, i);
+
+    return str;
+}
+
+
 int tracking_player_on_map(human player, int map[][28], char c)
 {
     int player_width = player.frame_width;
     int player_height = player.frame_height;
     int clearance_y = 5;
     int clearance_x = 5;
-    int bouding_box[][3] = {{player.y - clearance_y, player.x ,player.x + player_width + clearance_x-6,},
-                            {player.y + player_height + clearance_y, player.x, player.x + player_width+ clearance_x-6},
+    int bouding_box[][3] = {{player.y - clearance_y, player.x ,player.x + player_width + clearance_x-2,},
+                            {player.y + player_height + clearance_y, player.x, player.x + player_width+ clearance_x-2},
                             {player.y, player.y + player_height + clearance_y-6, player.x - clearance_x},
-                            {player.y, player.y + player_height + clearance_y-6, player.x + player_width + clearance_x}}; 
+                            {player.y, player.y + player_height + clearance_y-6, player.x + player_width + clearance_x+3}}; 
 
     if (c == 'a')
     {   
@@ -99,25 +155,17 @@ int npc_hit_detection(human humans[], unsigned int object_x, unsigned int object
                     && player_bounding_box[0][1] <= character_bounding_box[1][0]
                     && player_bounding_box[2][0] >= character_bounding_box[0][1]
                     && player_bounding_box[0][0] <= character_bounding_box[2][1]){
-                        uart_puts("got hit advaced\n");
                         return 1;
                     }
             }
 
             // false safe collision for smaller character
                 if(absolute(object_x - humans[i].x) < 42 && absolute(object_y - humans[i].y) < 49){
-                    uart_puts("got hit\n");
                     return 2;
                 }
         }
     }
     
-    // for(int i =1; i < 10; i++){
-    //     if(absolute(object_x - humans[i].x) < 42 && absolute(object_y - humans[i].y) < 49){
-    //         uart_puts("got hit\n");
-    //     return 1;
-    //     }
-    // }
     return 0;
 }
 
@@ -262,16 +310,6 @@ human character1_init(int x, int y, int moveup_offset, int is_npc,unsigned int f
     return character1;
 }
 
-unsigned int absolute(int num)
-{
-    if (num < 0)
-    {
-        num = num * -1;
-        return num;
-    }
-    return num;
-}
-
 
 human controlCharater(int map[][28], human characters[], human player1, char c, int is_collision, int *hit_player, const unsigned long *frame_array[])
 {   
@@ -331,8 +369,6 @@ human controlCharater(int map[][28], human characters[], human player1, char c, 
         player1 = plant_bomb(map,characters, player1, c, hit_player);
     }
     if(c == 'h' && player1.is_npc){
-        uart_dec(player1.moveleft_frame_offset + player1.frame_max);
-        uart_sendc('\n');
         player1.offset = player1.moveleft_frame_offset + player1.frame_max + 1;
     }
 
@@ -342,7 +378,7 @@ human controlCharater(int map[][28], human characters[], human player1, char c, 
 }
 
 
-human move(int map[][28], human players[], human npc, moves moves[], unsigned int move_size, int is_collision, int *hit_player, const unsigned long *frame_array[], int is_loop)
+human move(int map[][28], human players[], human npc, moves moves[], unsigned int move_size, int *hit_player, const unsigned long *frame_array[], int is_loop)
 {
     //human temp = controlCharater(players, npc, moves[npc.move_index].direction, is_collision, hit_player, frame_array);
     human temp = controlCharater(map,players, npc, moves[npc.move_index].direction, tracking_player_on_map(npc, map, moves[npc.move_index].direction), hit_player, frame_array);
