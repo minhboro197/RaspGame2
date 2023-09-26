@@ -57,6 +57,7 @@ void draw_game_status(int status){
         drawGameAsset(0,350,350, you_die_width, you_die_height, you_die_allArray);
     }
 }
+
 void print_map(int map[][28]){
     for(int i = 0; i < 17; i++){
             for(int j = 0; j < 28; j++){

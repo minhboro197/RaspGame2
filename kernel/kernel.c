@@ -656,44 +656,44 @@ void main()
     drawGameAsset(0,150,0,welcome_page_width, welcome_page_height,welcome_page_allArray);
 
     promt_continue();
-    drawString(180,200, "In a world veiled in darkness and peril, an unsung hero emerges. Their quest: to unlock the ", 0x0d);
-    drawString(180,200+20, "power of ancient relics and avert impending catastrophe. The journey begins with a ", 0x0d);
-    drawString(180,200+20*2, "treacherous maze, guarded by monstrous foes.", 0x0d);
-    drawString(180,200+20*4, "Armed with alchemical expertise and a deadly arsenal of bombs, our hero strides forth. They", 0x0d);
-    drawString(180,200+20*5, "must conquer the labyrinth, decipher secrets, and face formidable adversaries. With AWDS", 0x0d);
-    drawString(180,200+20*6, "keys for movement and explosive prowess bound to 'J', their fate unfolds with each step.", 0x0d);
-    drawString(180,200+20*8, "As the adventure ignites, the hero's footsteps echo through the dark corridors, and the ", 0x0d);
-    drawString(180,200+20*9, "destiny of the world hangs in the balance. The legend unfolds in a symphony of courage and ", 0x0d);
-    drawString(180,200+20*10, "explosions.", 0x0d);
-    drawString(450,200+20*12, "Press P to continue", 0x0d);
-    promt_continue();
+    // drawString(180,200, "In a world veiled in darkness and peril, an unsung hero emerges. Their quest: to unlock the ", 0x0d);
+    // drawString(180,200+20, "power of ancient relics and avert impending catastrophe. The journey begins with a ", 0x0d);
+    // drawString(180,200+20*2, "treacherous maze, guarded by monstrous foes.", 0x0d);
+    // drawString(180,200+20*4, "Armed with alchemical expertise and a deadly arsenal of bombs, our hero strides forth. They", 0x0d);
+    // drawString(180,200+20*5, "must conquer the labyrinth, decipher secrets, and face formidable adversaries. With AWDS", 0x0d);
+    // drawString(180,200+20*6, "keys for movement and explosive prowess bound to 'J', their fate unfolds with each step.", 0x0d);
+    // drawString(180,200+20*8, "As the adventure ignites, the hero's footsteps echo through the dark corridors, and the ", 0x0d);
+    // drawString(180,200+20*9, "destiny of the world hangs in the balance. The legend unfolds in a symphony of courage and ", 0x0d);
+    // drawString(180,200+20*10, "explosions.", 0x0d);
+    // drawString(450,200+20*12, "Press P to continue", 0x0d);
+    // promt_continue();
 
-    human temp = play_game1(map2);
-    if(temp.is_alive == 0){
-        draw_game_status(2);
-        uart_puts("GAME OVER\n");
-        return;
-    }
-    drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
-    drawString(180,200, "Beyond the labyrinth's first trials, a new threat looms – relentless monsters hot on our hero's ", 0x0d);
-    drawString(180,200+20, "heels. Escape is paramount. Scattered throughout the maze lie essential items, the keys to ", 0x0d);
-    drawString(180,200+20*2, "survival", 0x0d);
-    drawString(180,200+20*4, "As the chase intensifies, our hero races against time, snatching vital items while evading ", 0x0d);
-    drawString(180,200+20*5, "their relentless pursuers. Each step is a heartbeat away from peril, and every choice carries ", 0x0d);
-    drawString(180,200+20*6, "life-or-death consequences.", 0x0d);
-    drawString(180,200+20*8, "In this heart-pounding stage, the labyrinth becomes a deadly game of wits and speed. The", 0x0d);
-    drawString(180,200+20*9, "hero's fate hinges on their ability to run, collect, evade, and conquer. The legend continues in ", 0x0d);
-    drawString(180,200+20*10, "a breathless race for survival.", 0x0d);
-    drawString(450,200+20*12, "Press P to continue", 0x0d);
-    promt_continue();
+    // human temp = play_game1(map2);
+    // if(temp.is_alive == 0){
+    //     draw_game_status(2);
+    //     uart_puts("GAME OVER\n");
+    //     return;
+    // }
+    // drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
+    // drawString(180,200, "Beyond the labyrinth's first trials, a new threat looms – relentless monsters hot on our hero's ", 0x0d);
+    // drawString(180,200+20, "heels. Escape is paramount. Scattered throughout the maze lie essential items, the keys to ", 0x0d);
+    // drawString(180,200+20*2, "survival", 0x0d);
+    // drawString(180,200+20*4, "As the chase intensifies, our hero races against time, snatching vital items while evading ", 0x0d);
+    // drawString(180,200+20*5, "their relentless pursuers. Each step is a heartbeat away from peril, and every choice carries ", 0x0d);
+    // drawString(180,200+20*6, "life-or-death consequences.", 0x0d);
+    // drawString(180,200+20*8, "In this heart-pounding stage, the labyrinth becomes a deadly game of wits and speed. The", 0x0d);
+    // drawString(180,200+20*9, "hero's fate hinges on their ability to run, collect, evade, and conquer. The legend continues in ", 0x0d);
+    // drawString(180,200+20*10, "a breathless race for survival.", 0x0d);
+    // drawString(450,200+20*12, "Press P to continue", 0x0d);
+    // promt_continue();
 
-    //human temp = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height,5);
-    human temp2 = play_game2(map3,temp);
-    if(temp.is_alive == 0){
-        draw_game_status(2);
-        uart_puts("GAME OVER\n");
-        return;
-    }
+    // //human temp = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height,5);
+    // human temp2 = play_game2(map3,temp);
+    // if(temp2.is_alive == 0){
+    //     draw_game_status(2);
+    //     uart_puts("GAME OVER\n");
+    //     return;
+    // }
     drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
     drawString(180,200, "At the heart of the labyrinth, where darkness and danger converge, our hero's journey ", 0x0d);
     drawString(180,200+20, "reaches its climax. A formidable adversary awaits – a powerful dragon, a guardian of ancient ", 0x0d);
@@ -710,7 +710,7 @@ void main()
     drawString(450,200+20*16, "Press P to continue", 0x0d);
     promt_continue();
 
-    //human temp2 = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height,5);
+    human temp2 = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height,5);
     int result = final_boss(temp2);
     if(result == 1){
         draw_game_status(1);
