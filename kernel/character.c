@@ -7,14 +7,18 @@
 
 void character_take_damage(human *characters[], int *got_hit_player,int *take_damaged_once,int size){
         for(int i = 0; i <size; i++){
-            //uart_dec(*take_damaged_once);
-            //uart_sendc('\n');
             if(*take_damaged_once == 1){
                 if(*got_hit_player == i){
+                    uart_dec(i);
+                    uart_sendc('\n');
+                    uart_puts("hit\n");
                     if(i == 0){
                         characters[i]->offset = 36;
                     }
-                    characters[i]->health -= 1;
+                    characters[i]->health -= characters[0]->bomb_damage;
+                    //if(characters[i]->health < 0 ){
+                        //characters[i]->is_alive = 0;
+                    //}
                     characters[i]->got_hit = 1;
                     *got_hit_player = -1;
                     *take_damaged_once = 0;
@@ -74,30 +78,86 @@ int tracking_player_on_map(human player, int map[][28], char c)
 }
 
 int npc_hit_detection(human humans[], unsigned int object_x, unsigned int object_y){
-    
-    for(int i =1; i < 10; i++){
-        if(absolute(object_x - humans[i].x) < 42 && absolute(object_y - humans[i].y) < 49){
-            uart_puts("got hit\n");
-        return 1;
+
+   int player_bounding_box[][2] = {{object_y, object_x},
+                        {object_y, object_x + humans[0].frame_width-1},
+                        {object_y + humans[0].frame_height-1, object_x},
+                        {object_y + humans[0].frame_height-1, object_x + humans[0].frame_width-1}};
+
+
+    // collision with npc
+    for(int i = 1; i < 10; i++){
+        for(int j = 0; j < 4; j++){
+            int character_bounding_box[][2] = {{humans[i].x, humans[i].y},
+                                            {humans[i].x + humans[i].frame_width, humans[i].y},
+                                            {humans[i].x, humans[i].y + humans[i].frame_height},
+                                            {humans[i].x + humans[i].frame_width, humans[i].y + humans[i].frame_height}};
+            
+            if(i > 4){
+                            // collison check for 4 corner
+                if(player_bounding_box[1][1] >= character_bounding_box[0][0]
+                    && player_bounding_box[0][1] <= character_bounding_box[1][0]
+                    && player_bounding_box[2][0] >= character_bounding_box[0][1]
+                    && player_bounding_box[0][0] <= character_bounding_box[2][1]){
+                        uart_puts("got hit advaced\n");
+                        return 1;
+                    }
+            }
+
+            // false safe collision for smaller character
+                if(absolute(object_x - humans[i].x) < 42 && absolute(object_y - humans[i].y) < 49){
+                    uart_puts("got hit\n");
+                    return 2;
+                }
         }
     }
+    
+    // for(int i =1; i < 10; i++){
+    //     if(absolute(object_x - humans[i].x) < 42 && absolute(object_y - humans[i].y) < 49){
+    //         uart_puts("got hit\n");
+    //     return 1;
+    //     }
+    // }
     return 0;
 }
 
 int collision_detection(int map[][28],human humans[], unsigned int object_x, unsigned int object_y){
-    for(int i = 0; i < 10; i++){
-        if(absolute(object_x - humans[i].x) < 28 && absolute(object_y - humans[i].y) < 29){
-            return i;
+    
+    int bomb_bounding_box[][2] = {{object_y, object_x},
+                        {object_y, object_x + explosion_width-1},
+                        {object_y + explosion_height-1, object_x},
+                        {object_y + explosion_height-1, object_x + explosion_width-1}};
+
+        // collision with walls
+    for(int i = 0; i < 4; i++){
+        if(map[bomb_bounding_box[i][0]/46][bomb_bounding_box[i][1]/38] > 0){
+            return -1;
         }
     }
+    
+    // collision with npc
+    for(int i = 0; i < 10; i++){
+        for(int j = 0; j < 4; j++){
+            int character_bounding_box[][2] = {{humans[i].x, humans[i].y},
+                                            {humans[i].x + humans[i].frame_width, humans[i].y},
+                                            {humans[i].x, humans[i].y + humans[i].frame_height},
+                                            {humans[i].x + humans[i].frame_width, humans[i].y + humans[i].frame_height}};
+            
 
-    int bounding_box[][2] = {{object_y, object_x},
-                            {object_y, object_x + 25},
-                            {object_y + 25, object_x},
-                            {object_y + 25, object_x +25}};
-    for(int i =0; i < 4; i++){
-        if(map[bounding_box[i][0]/46][bounding_box[i][1]/38] > 0){
-            return -1;
+            // collison check for 4 corner
+            if(bomb_bounding_box[1][1] >= character_bounding_box[0][0]
+                && bomb_bounding_box[0][1] <= character_bounding_box[1][0]
+                && bomb_bounding_box[2][0] >= character_bounding_box[0][1]
+                && bomb_bounding_box[0][0] <= character_bounding_box[2][1]){
+                    return i;
+                }
+
+            // false safe collision for smaller character
+            for(int k = 0; k < 4; k++){
+                if(absolute(bomb_bounding_box[k][1] - character_bounding_box[j][0]) < 10 && absolute(bomb_bounding_box[k][0] - character_bounding_box[j][1]) < 10){
+                    return i;
+                }
+            }
         }
     }
     return -2;
@@ -143,7 +203,7 @@ human plant_bomb(int map[][28],human characters[], human player1, char c, int *h
             drawGameAsset(player1.bomb[i].frame, player1.bomb[i].x, player1.bomb[i].y, bomb_width, bomb_height, bomb_allArray);
             if (player1.bomb[i].frame > 4)
             {
-                for (int j = 0; j < player1.range+1; j++)
+                for (int j = 0; j < player1.bomb_range+1; j++)
                 { // 4 here is max range change this later
                     int bomb_directions[4][2] = {{player1.bomb[i].x, player1.bomb[i].y - 46 * j},
                                                  {player1.bomb[i].x, player1.bomb[i].y + 46 * j},
@@ -173,9 +233,11 @@ human plant_bomb(int map[][28],human characters[], human player1, char c, int *h
     return player1;
 }
 
-human character1_init(int x, int y, int moveup_offset, int is_npc,unsigned int frame_max, unsigned int frame_width, unsigned int frame_height)
+human character1_init(int x, int y, int moveup_offset, int is_npc,unsigned int frame_max, unsigned int frame_width, unsigned int frame_height, int health)
 {
     human character1;
+    character1.bomb_range = 2;
+    character1.bomb_damage = 1;
     character1.mode = 0;
     character1.frame = 0;
     character1.is_alive = 1;
@@ -194,7 +256,7 @@ human character1_init(int x, int y, int moveup_offset, int is_npc,unsigned int f
     character1.offset = 8;
     character1.move_index = 0;
     character1.bomb_num = 0;
-    character1.health = 5;
+    character1.health = health;
     character1.damage = 5;
     character1.range = 2;
     return character1;
@@ -267,11 +329,11 @@ human controlCharater(int map[][28], human characters[], human player1, char c, 
     else if (c == 'j' || player1.bomb_num)
     {
         player1 = plant_bomb(map,characters, player1, c, hit_player);
-    }else if (c == 't'){
-        
-       player1.offset = 36;
-    }else if (c == 'p'){
-        player1.offset = 36 + player1.frame;
+    }
+    if(c == 'h' && player1.is_npc){
+        uart_dec(player1.moveleft_frame_offset + player1.frame_max);
+        uart_sendc('\n');
+        player1.offset = player1.moveleft_frame_offset + player1.frame_max + 1;
     }
 
     drawGameAsset(player1.offset, player1.x, player1.y, player1.frame_width, player1.frame_height, frame_array);

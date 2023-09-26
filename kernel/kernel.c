@@ -3,7 +3,6 @@
 #include "framebf.h"
 #include "map.h"
 #include "./player/magewalking.h"
-#include "boss/dragons.h"
 #include "./sub_boss/knight.h"      // character.h here
 #include "map_array.h"
 #include "./npcs/goblin.h"
@@ -11,7 +10,11 @@
 #include "./npcs/goblem.h"
 #include "./npcs/death.h"
 #include "./npcs/gladiatorwalking.h"
-// the compiler randomly ask for memcpy so i included it here
+#include "./npcs/mush_room.h"
+#include "./npcs/eye_ball.h"
+#include "./welcome_image.h"
+
+// the compiler randomly ask for memcpy.memset so i included it here
 void *memcpy(void *dest, const void *src, int count)
 {
     char *d = dest;
@@ -37,6 +40,9 @@ void *memset(void *dest, int value, int count)
 }
 
 
+int dx[] = {-1, 1, 0, 0};
+int dy[] = {0, 0, -1, 1};
+
 void reset_flood_map(int map[][28]){
         // Copy map
     for(int i = 0; i < 17; i++){
@@ -57,10 +63,6 @@ void reset_flood_map(int map[][28]){
         }
     }
 }
-
-
-int dx[] = {-1, 1, 0, 0};
-int dy[] = {0, 0, -1, 1};
 
 void dijkstra_find_route(int map[][28], int x, int y, int x_end, int y_end, int distance[][28]){
     if(map[x_end][y_end] != -2){
@@ -170,9 +172,12 @@ int once = 1;
 int take_damaged_once = 0;
 int got_hit_player = -1;
 
-void play_game1(int map[][28]){
+human play_game1(int map[][28]){
     draw_map_from_array(map);
 
+
+    ////////////////////////////
+    // NPC, Player init
     moves npc1_moves[] = {
     {'w', {1,7}},
     {'s', {1,11}}};
@@ -180,21 +185,31 @@ void play_game1(int map[][28]){
     moves npc2_moves[] = {
         {'d', {8,9}},
         {'a', {5,9}}};
+
+     moves npc3_moves[] = {
+        {'a', {10,3}},
+        {'d', {14,3}}};
+
+        moves npc4_moves[] = {
+        {'d', {20,3}},
+        {'a', {17,3}}};
     
     moves *all_npc_moves[] = {&npc1_moves, &npc2_moves};
     
 
     // wall block width and height is 38 and 46
     // span characters in the below format
-    human player1 = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height);
+    human player1 = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height,5);
 
-    human npc1 = character1_init(block_width * 1, block_height * 11, 7,1,6,goblin_width,goblin_height);
-    human npc2 = character1_init(38 * 5, 46 * 9, 4,1,3,gladiator_width,gladiator_height);
+    human npc1 = character1_init(block_width * 1, block_height * 11, 7,1,6,goblin_width,goblin_height,1);
+    human npc2 = character1_init(block_width * 5, block_height * 9, 4,1,3,gladiator_width,gladiator_height,1);
 
-    human npc3 = character1_init(38 * 15, 46 * 3, 3,1,2,red_dude_width,red_dude_height);
-
+    human npc3 = character1_init(block_width * 14, block_height * 3, 3,1,2,mush_room_width,mush_room_height,1);
+    human npc4 = character1_init(block_width * 17, block_height * 3, 3,1,2,eye_ball_width,eye_ball_height,1);
     
-    //print_map(flood_map);
+    //human npc5 = character1_init(block_width * 14, block_height * 3, 3,1,2,red_dude_width,red_dude_height,1);
+    //////////////////////////////////
+    
 
     int prior_player_health = player1.health;
     int game_status = 0;
@@ -205,6 +220,9 @@ void play_game1(int map[][28]){
     set_wait_timer(1, 10000); // set 10ms
     while (1)
     {   
+        if(player1.x/block_width == 25 && player1.y/block_height == 17){
+            return player1;
+        }
         char c = getUart();
 
         if(prior_player_health != player1.health){
@@ -216,21 +234,21 @@ void play_game1(int map[][28]){
             break;
         }
 
-        human *characters[] = {&player1, &npc1, &npc2, &npc3};   // Write only
-        human characters2[] = {*characters[0],*characters[1], *characters[2], *characters[3] };  // Read only
+        human *characters[] = {&player1, &npc1, &npc2, &npc3,&npc4};   // Write only
+        human characters2[] = {*characters[0],*characters[1], *characters[2], *characters[3], *characters[4] };  // Read only
 
 
         *characters[0] = controlCharater(map,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map, c),&got_hit_player, mage_walking_allArray);
         
-        character_take_damage(&characters,&got_hit_player,&take_damaged_once,4);
+        character_take_damage(&characters,&got_hit_player,&take_damaged_once,5);
         
 
         int timer = set_wait_timer(0, 0);
         if (timer)
         {   
-            // Player hit dection
+            // Player collision between characters
             if((timer % 50) == 0){ // every 500ms
-                if(npc_hit_detection(characters2, player1.x,player1.y)){
+                if(npc_hit_detection(characters2, player1.x,player1.y) == 2){
                     player1.offset = 36;
                     player1.health -=1;
                     if(player1.health < 0){
@@ -242,22 +260,23 @@ void play_game1(int map[][28]){
 
             if ((timer % 10) == 0)  // animation update every 100ms
             {   
-                for(int i = 0; i< 4; i++){
+                // Check bomb hit for all characters
+                for(int i = 0; i< 5; i++){
                     if(characters[i]->got_hit == 1){
-                        characters[i]->offset = characters[i]->movedown_frame_offset;
                         characters[i]->got_hit = 0;
                         if(characters[i]->health == 0){
                             characters[i]->is_alive = 0;
                         }
-
                     }
-
                 }
                 
+
+                // Move npcs
                 npc1 = move(map, characters2, npc1, npc1_moves, 2, 0,&got_hit_player,goblin_walking_allArray,1);
                 npc2 = move(map, characters2, npc2, npc2_moves, 2, 0,&got_hit_player,gladiator_walking_allArray,1);
-                //npc3 = move(map, characters2, npc3, red_dude_npc_chase, 100, 0,&got_hit_player,red_dude_allArray,1);
-
+                npc3 = move(map, characters2, npc3, npc3_moves, 2, 0,&got_hit_player,mush_room_allArray,1);
+                npc4 = move(map, characters2, npc4, npc4_moves, 2, 0,&got_hit_player,eye_ball_allArray,1);
+                
                 // For bomb animation
                 for (int i = 0; i < player1.bomb_num; i++)
                 {
@@ -283,39 +302,38 @@ void play_game1(int map[][28]){
     }
 }
 
-void play_game2(int map[][28])
-{  
+human play_game2(int map[][28], human player1)
+{   
+    player1.x = block_width*1;
+    player1.y = block_height*3;
+    drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
     draw_map_from_array(map);
+    char items_type[] = {'r','h','d'};
+    int items_location[][2] = {{1,13}, {25, 3}, {23,13}};
 
+    Items item1 = {1,13,'r',1};
+    Items item2 = {25,3,'h',1};
+    Items item3 = {23,13,'d',1};
+
+    Items items[] = {item1,item2,item3}; 
 
     moves death_npc_chase[100];
     moves red_dude_npc_chase[100];
     moves goblem_npc_chase[100];
 
     moves *npc_chases[] = {&death_npc_chase, &goblem_npc_chase, &red_dude_npc_chase};
-
-    moves npc1_moves[] = {
-        {'d', {5,11}},
-        {'a', {1,11}}};
-
-    moves npc2_moves[] = {
-        {'w', 100},
-        {'d', 80},
-        {'s', 100},
-        {'a', 100}};
-    
-    moves* all_npc_moves[] = {npc1_moves, npc2_moves};
     
 
     // wall block width and height is 38 and 46
     // span characters in the below format
-    human player1 = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height);
+    //human player1 = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height,5);
 
-    human npc1 = character1_init(block_width * 1, block_height * 11, 3,0,2,death_width,death_height);
-    human npc2 = character1_init(38 * 5, 46 * 9, 3,0,2,goblem_width,goblem_height);
-    human npc3 = character1_init(38 * 15, 46 * 3, 3,0,2,red_dude_width,red_dude_height);
+    human npc1 = character1_init(block_width * 1, block_height * 11, 3,1,2,death_width,death_height,1);
+    human npc2 = character1_init(block_width * 5, block_height * 9, 3,1,2,goblem_width,goblem_height,1);
+    human npc3 = character1_init(block_width * 15, block_height * 3, 3,1,2,red_dude_width,red_dude_height,1);
 
     
+    const unsigned long **npc_array[] = {death_allArray,goblem_allArray,red_dude_allArray};
     //print_map(flood_map);
 
     int prior_player_health = player1.health;
@@ -326,7 +344,7 @@ void play_game2(int map[][28])
     int player_prior_x[] = {0,0,0};
     int player_prior_y[] = {0, 0,0};
     int npc_timer[] = {150,200,250};
-
+    
     // 1 seconds = 1000000
     set_wait_timer(1, 10000); // set 10ms
     while (1)
@@ -338,8 +356,14 @@ void play_game2(int map[][28])
             draw_stats(player1.health);
             prior_player_health = player1.health;
         }
+        //uart_dec(game_status);
+        //uart_sendc('\n');
         if(game_status == 1){
-            break;
+            player1.is_alive = 1;
+            return player1;
+        }else if(game_status == 2){
+            player1.is_alive = 0;
+            return player1;
         }
 
         human *characters[] = {&player1, &npc1, &npc2, &npc3};   // Write only
@@ -350,6 +374,32 @@ void play_game2(int map[][28])
         
         character_take_damage(&characters,&got_hit_player,&take_damaged_once,4);
         
+        game_status = 1;
+        for(int i = 1; i < 4; i++){
+            if(characters[i]->is_alive == 1){
+                game_status = 0;
+            }
+        }
+
+        // Get items for player
+        for(int i = 0; i < sizeof(items)/sizeof(items[0]); i++){
+            if(player1.x/block_width == items[i].x && player1.y/block_height == items[i].y){
+                if(items[i].available == 0){
+                    continue;
+                }
+                items[i].available = 0;
+                if(items[i].type == 'r'){
+                    player1.bomb_range++;
+                    uart_puts("range item\n");
+                }else if(items[i].type == 'h'){
+                    player1.health++;
+                    uart_puts("health item\n");
+                }else if(items[i].type == 'd'){
+                    player1.bomb_damage+=5;
+                    uart_puts("damage item\n");
+                }
+            }
+        }
 
         int timer = set_wait_timer(0, 0);
         if (timer)
@@ -370,38 +420,34 @@ void play_game2(int map[][28])
                 }
             }
 
-
-
             // Player hit dection
             if((timer % 50) == 0){ // every 500ms
                 if(npc_hit_detection(characters2, player1.x,player1.y)){
                     player1.offset = 36;
                     player1.health -=1;
                     if(player1.health < 0){
-                        player1.is_alive =0;
-                        game_status = 1;
+                        player1.is_alive = 0;
+                        game_status = 2;
                     }
                 }
             }
 
-
-
-            if ((timer % 10) == 0)  // animation update every 100ms
-            {   
-                for(int i = 0; i< 4; i++){
+            for(int i = 1; i< 4; i++){  // NPC take damge
                     if(characters[i]->got_hit == 1){
-                        characters[i]->offset = characters[i]->movedown_frame_offset;
+                        *characters[i] = controlCharater(map,characters2, *characters[i], 'h', tracking_player_on_map(*characters[i], map, 'h'),&got_hit_player, npc_array[i-1]);
                         characters[i]->got_hit = 0;
-                        if(characters[i]->health == 0){
+                        if(characters[i]->health <= 0){
                             characters[i]->is_alive = 0;
                         }
 
                     }
-
                 }
-                npc1 = move(map, characters2, npc1, death_npc_chase, 100, 0,&got_hit_player,death_allArray,0);
-                npc2 = move(map, characters2, npc2, goblem_npc_chase, 100, 0,&got_hit_player,goblem_allArray,0);
-                npc3 = move(map, characters2, npc3, red_dude_npc_chase, 100, 0,&got_hit_player,red_dude_allArray,0);
+
+            if ((timer % 10) == 0)  // animation update every 100ms
+            {   
+                *characters[1] = move(map, characters2, *characters[1], death_npc_chase, 100, 0,&got_hit_player,npc_array[0],0);
+                npc2 = move(map, characters2, npc2, goblem_npc_chase, 100, 0,&got_hit_player,npc_array[1],0);
+                npc3 = move(map, characters2, npc3, red_dude_npc_chase, 100, 0,&got_hit_player,npc_array[2],0);
 
                 // For bomb animation
                 for (int i = 0; i < player1.bomb_num; i++)
@@ -428,22 +474,33 @@ void play_game2(int map[][28])
     }
 }
 
-void sub_boss(){
-    
+void final_boss(human player1){
+    player1.x = 500;
+    player1.y = 400;
+    //player1.bomb_damage = 5;
+    drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
     draw_map_from_array(map4);
-    human player1 = character1_init(38, 46 * 3, 9,0,8,mage_width,mage_height);
-    human knight1 = character1_init(38 * 3, 46 * 5, 9,1,8,59,72);
-    human knight2 = character1_init(38 * 3, 46 * 10, 9,1,8,59,72);
-    human knight3 = character1_init(38 * 23, 46 * 5, 9,1,8,59,72);
-    human knight4 = character1_init(38 * 23, 46 * 10, 9,1,8,59,72);
+
+    //human player1 = character1_init(38, 46 * 3, 9,0,8,mage_width,mage_height);
+    human dragon_boss = character1_init(block_width * 10, block_height * 5, 7,1,6, 168, 175,10);
+    Explosion explosion = {dragon_boss.x+80,dragon_boss.y+80,dragon_boss.x+80,dragon_boss.y+80,0,0,0};
+
+    human knight1 = character1_init(block_width * 3, block_height * 5, 9,1,8,59,72, 5);
+    human knight2 = character1_init(block_width * 3, block_height * 10, 9,1,8,59,72,5);
+    human knight3 = character1_init(block_width * 23, block_height * 5, 9,1,8,59,72,5);
+    human knight4 = character1_init(block_width * 23, block_height * 10, 9,1,8,59,72,5);
 
     set_wait_timer(1, 10000); // set 10ms
 
-    int knight_timer[] = {10,15,20,25};
-    int counter[] = {0,0,0,0};
+    int knight_timer[] = {10,15,20,25,30,30,30,30,30};
+    int counter[] = {0,0,0,0,0,0,0,0,0};
     int move_signal[] = {0,0,0,0};
-    int player_prior_x[] = {knight1.x,knight2.x,knight3.x, knight4.x};
-    int player_prior_y[] = {knight1.y, knight2.y,knight3.y, knight4.y};
+    int player_prior_x[10];
+    int player_prior_y[10];
+    for(int i = 0; i < 10; i++){
+        player_prior_x[i] = player1.x ;
+        player_prior_y[i] = player1.y;
+    }
     int prior_player_health = player1.health;
     int game_status = 0;
     draw_stats(player1.health);
@@ -463,37 +520,48 @@ void sub_boss(){
             break;
         }
 
-        human *characters[] = {&player1,&knight1,&knight2,&knight3,&knight4};   // Write only
-        human characters2[] = {*characters[0],*characters[1],*characters[2], *characters[3], *characters[4]};  // Read only
+        human *characters[] = {&player1,&knight1,&knight2,&knight3, &knight4, &dragon_boss};   // Write only
+        human characters2[] = {*characters[0],*characters[1],*characters[2], *characters[3], *characters[4], *characters[5]};  // Read only
 
 
         *characters[0] = controlCharater(map4,characters2, *characters[0], c, tracking_player_on_map(*characters[0], map4, c),&got_hit_player, mage_walking_allArray);
 
-        character_take_damage(&characters,&got_hit_player,&take_damaged_once,5);
+        character_take_damage(&characters,&got_hit_player,&take_damaged_once,6);
         
         
         
         int timer = set_wait_timer(0, 0);
         if (timer)
-        {
+        {   
+            if(player1.health <= 0){
+                game_status = 1;
+            }
+            if(timer % 100 == 0){
+                if(npc_hit_detection(characters2, player1.x,player1.y) == 1){
+                    player1.health--;
+                    
+                }                
+            }
             if ((timer % 10) == 0)
             {    
-
-
-                drawGameAsset(i,400,200,dragon_boss_width,dragon_boss_height,dargon_boss_allArray);
-                    i++;
-                    if(i > 7){
-                        i = 0;
+                for(int i = 0; i < 5; i++){
+                    counter[i+4]++;
+                    if(counter[i+4] == knight_timer[i+4]){
+                        player_prior_x[i+4] = player1.x;
+                        player_prior_y[i+4] = player1.y;
+                        counter[i+4] = 0;
                     }
-                
-
+                }
                 //uart_dec(move_signal[0]);
                 //uart_sendc('\n');
-                for(int i = 0; i< 4; i++){
+                for(int i = 0; i< 5; i++){
                     if(characters[i+1]->got_hit){
                         move_signal[i] = 4;   // move to huting phase
                         characters[i+1]->got_hit = 0;
-                        if(characters[i+1]->health <= 0){
+                        if(characters[i+1]->health < 0){
+                            if(i+1 > 4){
+                                characters[i+1]->is_alive = 0;
+                            }
                             move_signal[i] = 3;   // move to dying phase
                         }
                     }
@@ -525,11 +593,13 @@ void sub_boss(){
                     }
                     
                 }
-            
-                knight1 = control_knight(player1, knight1,&move_signal[0],player_prior_x[0],player_prior_y[0],5);
-                knight2 = control_knight(player1, knight2,&move_signal[1],player_prior_x[1],player_prior_y[1],7);
-                knight3 = control_knight(player1, knight3,&move_signal[2],player_prior_x[2],player_prior_y[2],9);
-                knight4 = control_knight(player1, knight4,&move_signal[3],player_prior_x[3],player_prior_y[3],8);
+                dragon_boss = control_dragon(&player1,dragon_boss,&explosion, player_prior_x[4], player_prior_y[4],20);
+                if(dragon_boss.health < 5){
+                     knight1 = control_knight(player1, knight1,&move_signal[0],player_prior_x[0],player_prior_y[0],5);
+                    knight2 = control_knight(player1, knight2,&move_signal[1],player_prior_x[1],player_prior_y[1],7);
+                    knight3 = control_knight(player1, knight3,&move_signal[2],player_prior_x[2],player_prior_y[2],9);
+                    knight4 = control_knight(player1, knight4,&move_signal[3],player_prior_x[3],player_prior_y[3],8);
+                }
 
                 for (int i = 0; i < player1.bomb_num; i++)
                 {
@@ -556,37 +626,15 @@ void sub_boss(){
     }
 }
 
-void final_boss(){
-    int i = 0;
-    set_wait_timer(1, 10000); // set 10ms
-    while (1)
-    {   
-        int timer = set_wait_timer(0, 0);
-        if (timer)
-        {
-            if ((timer % 10) == 0)
-            { 
-                
-                drawGameAsset(i,500 , 500 , 32,32, death_allArray);
-                i++;
-                /*
-                drawGameAsset(i,400,200,dragon_boss_width,dragon_boss_height,dargon_boss_allArray);
-                i++;
-                if(i > 7){
-                    i = 0;
-                }
-                */
-                if(i > death_allArray_LEN-1){
-                    i = 0;
-                }
-            }
-
-            set_wait_timer(1, 10000); // reset 10ms timer
+void promt_continue(){
+        while(1){
+        char c = getUart();
+        if(c == 'p'){
+            drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
+            break;
         }
     }
 }
-
-
 
 void main()
 {
@@ -597,9 +645,55 @@ void main()
     // Initialize frame buffer
     framebf_init();
     // echo everything back
-    //play_game(map2);
-    play_game1(map2);
-    //final_boss();
-    //sub_boss();
+    drawGameAsset(0,150,0,welcome_page_width, welcome_page_height,welcome_page_allArray);
+
+    promt_continue();
+    drawString(180,200, "In a world veiled in darkness and peril, an unsung hero emerges. Their quest: to unlock the ", 0x0d);
+    drawString(180,200+20, "power of ancient relics and avert impending catastrophe. The journey begins with a ", 0x0d);
+    drawString(180,200+20*2, "treacherous maze, guarded by monstrous foes.", 0x0d);
+    drawString(180,200+20*4, "Armed with alchemical expertise and a deadly arsenal of bombs, our hero strides forth. They", 0x0d);
+    drawString(180,200+20*5, "must conquer the labyrinth, decipher secrets, and face formidable adversaries. With AWDS", 0x0d);
+    drawString(180,200+20*6, "keys for movement and explosive prowess bound to 'J', their fate unfolds with each step.", 0x0d);
+    drawString(180,200+20*8, "As the adventure ignites, the hero's footsteps echo through the dark corridors, and the ", 0x0d);
+    drawString(180,200+20*9, "destiny of the world hangs in the balance. The legend unfolds in a symphony of courage and ", 0x0d);
+    drawString(180,200+20*10, "explosions.", 0x0d);
+    drawString(450,200+20*12, "Press P to continue", 0x0d);
+    promt_continue();
+
+    human temp = play_game1(map2);
+    drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
+    drawString(180,200, "Beyond the labyrinth's first trials, a new threat looms – relentless monsters hot on our hero's ", 0x0d);
+    drawString(180,200+20, "heels. Escape is paramount. Scattered throughout the maze lie essential items, the keys to ", 0x0d);
+    drawString(180,200+20*2, "survival", 0x0d);
+    drawString(180,200+20*4, "As the chase intensifies, our hero races against time, snatching vital items while evading ", 0x0d);
+    drawString(180,200+20*5, "their relentless pursuers. Each step is a heartbeat away from peril, and every choice carries ", 0x0d);
+    drawString(180,200+20*6, "life-or-death consequences.", 0x0d);
+    drawString(180,200+20*8, "In this heart-pounding stage, the labyrinth becomes a deadly game of wits and speed. The", 0x0d);
+    drawString(180,200+20*9, "hero's fate hinges on their ability to run, collect, evade, and conquer. The legend continues in ", 0x0d);
+    drawString(180,200+20*10, "a breathless race for survival.", 0x0d);
+    drawString(450,200+20*12, "Press P to continue", 0x0d);
+    promt_continue();
+
+    human temp2 = play_game2(map3,temp);
+
+    drawRectARGB32(0,0,1024,768,0x00000000,1); // clear screen
+    drawString(180,200, "At the heart of the labyrinth, where darkness and danger converge, our hero's journey ", 0x0d);
+    drawString(180,200+20, "reaches its climax. A formidable adversary awaits – a powerful dragon, a guardian of ancient ", 0x0d);
+    drawString(180,200+20*2, "secrets, capable of spewing deadly fireballs.", 0x0d);
+    drawString(180,200+20*4, "The air is thick with tension, for this is no ordinary battle. The dragon's fiery onslaught ", 0x0d);
+    drawString(180,200+20*5, "demands agility and precision. Every move, every breath, must be calculated to perfection.", 0x0d);
+    drawString(180,200+20*7, "life-or-death consequences.", 0x0d);
+    drawString(180,200+20*8, "But the dragon is not the only threat. The labyrinth, relentless in its malevolence, springs ", 0x0d);
+    drawString(180,200+20*9, "unexpected ambushes. The hero must remain vigilant, for danger lurks around every corner.", 0x0d);
+    drawString(180,200+20*11, "As the hero steps into this fiery arena, the legend draws to its epic conclusion. In the face of ", 0x0d);
+    drawString(180,200+20*12, "searing flames and treacherous surprises, their courage and determination will be put to the ", 0x0d);
+    drawString(180,200+20*13, "ultimate test. The final stage has been set, and the hero's destiny hangs in the balance, ", 0x0d);
+    drawString(180,200+20*14, "poised to unravel in a blaze of fire and suspense.", 0x0d);
+    drawString(450,200+20*16, "Press P to continue", 0x0d);
+    promt_continue();
+
+    //human temp = character1_init(block_width*1, block_height * 3, 9,0,8,mage_width,mage_height,5);
+    final_boss(temp);
+    
     uart_puts("GAME OVER\n");
 }

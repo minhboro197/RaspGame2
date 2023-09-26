@@ -1,6 +1,7 @@
 // ----------------------------------- framebf.c -------------------------------------
 #include "mbox.h"
 #include "../uart/uart0.h"
+#include "./font.h"
 // Use RGBA32 (32 bits for each pixel)
 #define COLOR_DEPTH 32
 // Pixel Order: BGR in memory order (little endian --> RGB in byte order)
@@ -109,4 +110,49 @@ void drawRectARGB32(int x1, int y1, int x2, int y2, unsigned int attr, int fill)
             else if (fill)
                 drawPixelARGB32(x, y, attr);
         }
+}
+
+void drawPixel(int x, int y, unsigned char attr)
+{
+	int offs = (y * pitch) + (x * 4);
+	*((unsigned int *)(fb + offs)) = vgapal[attr & 0x0f];
+}
+
+void drawChar(unsigned char ch, int x, int y, unsigned char attr)
+{
+	unsigned char *glyph = (unsigned char *)&font + (ch < FONT_NUMGLYPHS ? ch : 0) * FONT_BPG;
+
+	for (int i = 0; i < FONT_HEIGHT; i++)
+	{
+		for (int j = 0; j < FONT_WIDTH; j++)
+		{
+			unsigned char mask = 1 << j;
+			unsigned char col = (*glyph & mask) ? attr & 0x0f : (attr & 0xf0) >> 4;
+
+			drawPixel(x + j, y + i, col);
+		}
+		glyph += FONT_BPL;
+	}
+}
+
+void drawString(int x, int y, char *s, unsigned char attr)
+{
+	while (*s)
+	{
+		if (*s == '\r')
+		{
+			x = 0;
+		}
+		else if (*s == '\n')
+		{
+			x = 0;
+			y += FONT_HEIGHT;
+		}
+		else
+		{
+			drawChar(*s, x, y, attr);
+			x += FONT_WIDTH;
+		}
+		s++;
+	}
 }
